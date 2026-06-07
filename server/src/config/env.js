@@ -10,4 +10,7 @@ module.exports = {
   fullDayPrice: Number(process.env.FULL_DAY_PRICE) || 50,
   hourlyRate: Number(process.env.HOURLY_RATE) || 15,
   uploadDir: process.env.UPLOAD_DIR || path.join(__dirname, '../../uploads'),
+  adminName: process.env.ADMIN_NAME || 'מנהל לונה פארק',
+  adminEmail: process.env.ADMIN_EMAIL || '',
+  adminPassword: process.env.ADMIN_PASSWORD || '',
 };

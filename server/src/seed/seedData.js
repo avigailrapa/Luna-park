@@ -1,5 +1,7 @@
 const Ride = require('../models/Ride');
 const Coupon = require('../models/Coupon');
+const User = require('../models/User');
+const { adminName, adminEmail, adminPassword } = require('../config/env');
 const { downloadImage } = require('./downloadMedia');
 
 const rideSeeds = [
@@ -115,7 +117,38 @@ const couponSeeds = [
   },
 ];
 
+async function seedAdmin() {
+  if (!adminEmail || !adminPassword) {
+    console.log('Admin seed skipped (set ADMIN_EMAIL and ADMIN_PASSWORD in .env)');
+    return;
+  }
+
+  const email = adminEmail.toLowerCase().trim();
+  const existing = await User.findOne({ email });
+
+  if (existing) {
+    if (existing.role !== 'admin') {
+      existing.role = 'admin';
+      await existing.save();
+      console.log(`Upgraded ${email} to admin`);
+    } else {
+      console.log(`Admin user already exists (${email})`);
+    }
+    return;
+  }
+
+  await User.create({
+    name: adminName,
+    email,
+    password: adminPassword,
+    role: 'admin',
+  });
+  console.log(`Seeded admin user: ${email}`);
+}
+
 async function seedDatabase() {
+  await seedAdmin();
+
   const rideCount = await Ride.countDocuments();
   if (rideCount === 0) {
     const rides = [];
