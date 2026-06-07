@@ -27,13 +27,13 @@ userSchema.methods.toJSON = function () {
 userSchema.statics.findByCredentials = async function (email, password) {
   const user = await this.findOne({ email }).select('+password');
   if (!user) {
-    const error = new Error('Invalid credentials');
+    const error = new Error('פרטי התחברות שגויים');
     error.statusCode = 401;
     throw error;
   }
   const match = await bcrypt.compare(password, user.password);
   if (!match) {
-    const error = new Error('Invalid credentials');
+    const error = new Error('פרטי התחברות שגויים');
     error.statusCode = 401;
     throw error;
   }

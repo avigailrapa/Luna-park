@@ -11,7 +11,7 @@ async function validateCoupon(code) {
 
   const Coupon = getCouponModel();
   if (!Coupon) {
-    const error = new Error('Coupon system is not available yet');
+    const error = new Error('מערכת הקופונים אינה זמינה כרגע');
     error.statusCode = 503;
     throw error;
   }
@@ -20,22 +20,22 @@ async function validateCoupon(code) {
   const coupon = await Coupon.findOne({ code: normalized });
 
   if (!coupon) {
-    const error = new Error('Coupon code is invalid');
+    const error = new Error('קוד הקופון אינו תקין');
     error.statusCode = 400;
     throw error;
   }
   if (!coupon.isActive) {
-    const error = new Error('Coupon is not active');
+    const error = new Error('הקופון אינו פעיל');
     error.statusCode = 400;
     throw error;
   }
   if (coupon.expiresAt <= new Date()) {
-    const error = new Error('Coupon has expired');
+    const error = new Error('תוקף הקופון פג');
     error.statusCode = 400;
     throw error;
   }
   if (coupon.usageLimit != null && coupon.usedCount >= coupon.usageLimit) {
-    const error = new Error('Coupon usage limit reached');
+    const error = new Error('הקופון הגיע למגבלת השימוש');
     error.statusCode = 400;
     throw error;
   }

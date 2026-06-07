@@ -11,6 +11,7 @@ const rideSchema = new mongoose.Schema(
       enum: ['thrill', 'family', 'kids', 'water', 'show'],
       default: 'family',
     },
+    price: { type: Number, required: true, min: 0 },
     status: {
       type: String,
       enum: ['active', 'maintenance'],

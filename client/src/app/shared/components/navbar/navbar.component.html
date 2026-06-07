@@ -1,23 +1,34 @@
 <mat-toolbar color="primary" class="navbar">
-  <a routerLink="/rides" class="brand">Luna-park</a>
+  <a routerLink="/rides" class="brand">לונה פארק</a>
   <span class="spacer"></span>
 
-  <a mat-button routerLink="/rides" routerLinkActive="active">Rides</a>
+  <a mat-button routerLink="/rides" routerLinkActive="active">מתקנים</a>
 
   @if (auth.isCustomer()) {
-    <a mat-button routerLink="/book" routerLinkActive="active">Book Ticket</a>
-    <a mat-button routerLink="/my-orders" routerLinkActive="active">My Orders</a>
+    <a mat-button routerLink="/book" routerLinkActive="active">הזמנת כרטיס</a>
+    <a
+      mat-button
+      routerLink="/cart-checkout"
+      routerLinkActive="active"
+      [matBadge]="cart.count()"
+      matBadgeColor="accent"
+      [matBadgeHidden]="cart.count() === 0"
+    >
+      <mat-icon>shopping_cart</mat-icon>
+      סל
+    </a>
+    <a mat-button routerLink="/my-orders" routerLinkActive="active">ההזמנות שלי</a>
   }
 
   @if (auth.isAdmin()) {
-    <a mat-button routerLink="/admin" routerLinkActive="active">Admin</a>
+    <a mat-button routerLink="/admin" routerLinkActive="active">ניהול</a>
   }
 
   @if (auth.isAuthenticated()) {
     <span class="user-label">{{ auth.user()?.name }}</span>
-    <button mat-button type="button" (click)="auth.logout()">Logout</button>
+    <button mat-button type="button" (click)="auth.logout()">התנתקות</button>
   } @else {
-    <a mat-button routerLink="/login" routerLinkActive="active">Login</a>
-    <a mat-button routerLink="/register" routerLinkActive="active">Register</a>
+    <a mat-button routerLink="/login" routerLinkActive="active">התחברות</a>
+    <a mat-button routerLink="/register" routerLinkActive="active">הרשמה</a>
   }
 </mat-toolbar>

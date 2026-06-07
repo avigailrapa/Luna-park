@@ -46,11 +46,34 @@ export class OrderHistoryComponent implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        this.snackBar.open(err.error?.message || 'Failed to load orders', 'Close', {
+        this.snackBar.open(err.error?.message || 'טעינת ההזמנות נכשלה', 'סגור', {
           duration: 4000,
         });
       },
     });
+  }
+
+  ticketTypeLabel(order: Order): string {
+    if (order.ticketType === 'full_day') {
+      return 'יום שלם';
+    }
+    if (order.ticketType === 'hourly') {
+      if (order.startHour != null && order.endHour != null) {
+        const pad = (h: number) => String(h).padStart(2, '0');
+        return `${pad(order.startHour)}:00–${pad(order.endHour)}:00`;
+      }
+      return `${order.hoursAmount} שעות`;
+    }
+    return 'מתקן';
+  }
+
+  statusLabel(status: Order['status']): string {
+    const labels: Record<Order['status'], string> = {
+      pending: 'ממתין',
+      confirmed: 'אושר',
+      cancelled: 'בוטל',
+    };
+    return labels[status] ?? status;
   }
 
   rideName(ride: Order['rideId']): string {

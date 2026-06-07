@@ -8,17 +8,20 @@
 
 html {
   height: 100%;
+  direction: rtl;
   @include mat.theme((
     color: (
       primary: mat.$azure-palette,
       tertiary: mat.$blue-palette,
     ),
-    typography: Roboto,
+    typography: Heebo,
     density: 0,
   ));
 }
 
 body {
+  direction: rtl;
+  font-family: 'Heebo', sans-serif;
   // Default the application to a light color theme. This can be changed to
   // `dark` to enable the dark color theme, or to `light dark` to defer to the
   // user's system settings.

@@ -47,7 +47,7 @@ export class RegisterComponent {
       next: () => this.router.navigate(['/rides']),
       error: (err) => {
         this.loading.set(false);
-        this.snackBar.open(err.error?.message || 'Registration failed', 'Close', { duration: 4000 });
+        this.snackBar.open(err.error?.message || 'ההרשמה נכשלה', 'סגור', { duration: 4000 });
       },
       complete: () => this.loading.set(false),
     });

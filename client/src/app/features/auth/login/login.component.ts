@@ -49,7 +49,7 @@ export class LoginComponent {
       },
       error: (err) => {
         this.loading.set(false);
-        this.snackBar.open(err.error?.message || 'Login failed', 'Close', { duration: 4000 });
+        this.snackBar.open(err.error?.message || 'ההתחברות נכשלה', 'סגור', { duration: 4000 });
       },
       complete: () => this.loading.set(false),
     });

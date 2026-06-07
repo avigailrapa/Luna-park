@@ -36,16 +36,16 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use((req, res) => {
-  res.status(404).json({ message: 'Route not found' });
+  res.status(404).json({ message: 'הנתיב לא נמצא' });
 });
 
 app.use(errorLogger);
 app.use((err, _req, res, _next) => {
   if (err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(400).json({ message: 'File too large. Maximum size is 10MB.' });
+    return res.status(400).json({ message: 'הקובץ גדול מדי. הגודל המקסימלי הוא 10MB.' });
   }
   const status = err.statusCode || err.status || 500;
-  res.status(status).json({ message: err.message || 'Internal server error' });
+  res.status(status).json({ message: err.message || 'שגיאת שרת פנימית' });
 });
 
 async function start() {

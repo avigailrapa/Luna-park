@@ -7,6 +7,7 @@ function parseRideBody(body) {
   const data = { ...body };
   if (data.capacity != null) data.capacity = Number(data.capacity);
   if (data.minimumHeight != null) data.minimumHeight = Number(data.minimumHeight);
+  if (data.price != null) data.price = Number(data.price);
   return data;
 }
 
@@ -42,7 +43,7 @@ async function getRideById(req, res, next) {
   try {
     const ride = await Ride.findById(req.params.id);
     if (!ride) {
-      return res.status(404).json({ message: 'Ride not found' });
+      return res.status(404).json({ message: 'המתקן לא נמצא' });
     }
     res.json({ ride });
   } catch (err) {
@@ -69,7 +70,7 @@ async function updateRide(req, res, next) {
   try {
     const ride = await Ride.findById(req.params.id);
     if (!ride) {
-      return res.status(404).json({ message: 'Ride not found' });
+      return res.status(404).json({ message: 'המתקן לא נמצא' });
     }
 
     const data = parseRideBody(req.body);
@@ -97,11 +98,11 @@ async function deleteRide(req, res, next) {
   try {
     const ride = await Ride.findByIdAndDelete(req.params.id);
     if (!ride) {
-      return res.status(404).json({ message: 'Ride not found' });
+      return res.status(404).json({ message: 'המתקן לא נמצא' });
     }
     removeFile(ride.imageUrl);
     removeFile(ride.audioUrl);
-    res.json({ message: 'Ride deleted' });
+    res.json({ message: 'המתקן נמחק' });
   } catch (err) {
     next(err);
   }

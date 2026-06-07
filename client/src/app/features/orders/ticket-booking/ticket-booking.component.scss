@@ -9,6 +9,19 @@
   display: block;
 }
 
+.hour-range {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.hours-note {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  color: #555;
+}
+
 .ticket-type {
   margin-bottom: 1rem;
 

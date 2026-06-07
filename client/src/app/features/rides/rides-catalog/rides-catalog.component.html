@@ -1,9 +1,9 @@
-<div class="page">
+<div class="page" [class.has-cart]="auth.isCustomer() && cart.count() > 0">
   <header class="page-header">
     <h1>מתקנים</h1>
-    <p>גלו את כל המתקנים ב-Luna Park</p>
+    <p>גלו את כל המתקנים ב-Luna Park והוסיפו לסל</p>
     @if (auth.isCustomer()) {
-      <a mat-raised-button color="primary" routerLink="/book">הזמנת כרטיס</a>
+      <a mat-raised-button color="primary" routerLink="/book">הזמנת כרטיס כניסה</a>
     }
   </header>
 
@@ -22,6 +22,7 @@
             @if (ride.status === 'maintenance') {
               <span class="badge maintenance-badge">בתחזוקה</span>
             }
+            <span class="badge price-badge">₪{{ ride.price }}</span>
           </div>
           <mat-card-header>
             <mat-card-title>{{ ride.name }}</mat-card-title>
@@ -37,6 +38,23 @@
               <audio controls [src]="mediaUrl(ride.audioUrl)" class="ride-audio"></audio>
             }
           </mat-card-content>
+          @if (auth.isCustomer()) {
+            <mat-card-actions>
+              <button
+                mat-raised-button
+                color="accent"
+                type="button"
+                [disabled]="ride.status !== 'active' || cart.hasRide(ride._id)"
+                (click)="addToCart(ride)"
+              >
+                @if (cart.hasRide(ride._id)) {
+                  <mat-icon>check</mat-icon> בסל
+                } @else {
+                  <mat-icon>add_shopping_cart</mat-icon> הוסף לסל
+                }
+              </button>
+            </mat-card-actions>
+          }
         </mat-card>
       }
     </div>
@@ -55,6 +73,11 @@
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>שם</th>
             <td mat-cell *matCellDef="let ride">{{ ride.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="price">
+            <th mat-header-cell *matHeaderCellDef>מחיר</th>
+            <td mat-cell *matCellDef="let ride">₪{{ ride.price }}</td>
           </ng-container>
 
           <ng-container matColumnDef="category">
@@ -81,10 +104,40 @@
             </td>
           </ng-container>
 
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let ride">
+              @if (auth.isCustomer()) {
+                <button
+                  mat-icon-button
+                  type="button"
+                  [disabled]="ride.status !== 'active' || cart.hasRide(ride._id)"
+                  (click)="addToCart(ride)"
+                  aria-label="הוסף לסל"
+                >
+                  <mat-icon>add_shopping_cart</mat-icon>
+                </button>
+              }
+            </td>
+          </ng-container>
+
           <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
         </table>
       </div>
     </section>
+  }
+
+  @if (auth.isCustomer() && cart.count() > 0) {
+    <aside class="cart-bar">
+      <div class="cart-bar-info">
+        <mat-icon>shopping_cart</mat-icon>
+        <span>{{ cart.count() }} מתקנים בסל</span>
+        <strong>₪{{ cart.total() }}</strong>
+      </div>
+      <button mat-flat-button color="primary" type="button" (click)="goToCheckout()">
+        מעבר לתשלום
+      </button>
+    </aside>
   }
 </div>

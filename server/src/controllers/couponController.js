@@ -5,14 +5,14 @@ async function validateCouponCode(req, res, next) {
   try {
     const code = req.query.code;
     if (!code || !String(code).trim()) {
-      return res.status(400).json({ valid: false, message: 'Coupon code is required' });
+      return res.status(400).json({ valid: false, message: 'יש להזין קוד קופון' });
     }
 
     const coupon = await validateCoupon(code);
     res.json({
       valid: true,
       discountPercent: coupon.discountPercent,
-      message: `${coupon.discountPercent}% discount applied`,
+      message: `הוחלה הנחה של ${coupon.discountPercent}%`,
     });
   } catch (err) {
     if (err.statusCode) {
@@ -55,7 +55,7 @@ async function updateCoupon(req, res, next) {
       runValidators: true,
     });
     if (!coupon) {
-      return res.status(404).json({ message: 'Coupon not found' });
+      return res.status(404).json({ message: 'הקופון לא נמצא' });
     }
     res.json({ coupon });
   } catch (err) {
@@ -67,9 +67,9 @@ async function deleteCoupon(req, res, next) {
   try {
     const coupon = await Coupon.findByIdAndDelete(req.params.id);
     if (!coupon) {
-      return res.status(404).json({ message: 'Coupon not found' });
+      return res.status(404).json({ message: 'הקופון לא נמצא' });
     }
-    res.json({ message: 'Coupon deleted' });
+    res.json({ message: 'הקופון נמחק' });
   } catch (err) {
     next(err);
   }

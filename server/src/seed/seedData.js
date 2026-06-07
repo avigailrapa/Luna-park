@@ -9,6 +9,7 @@ const rideSeeds = [
     capacity: 24,
     minimumHeight: 120,
     category: 'family',
+    price: 30,
     status: 'active',
     imageSource: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80',
     imageFile: 'ferris-wheel.jpg',
@@ -19,6 +20,7 @@ const rideSeeds = [
     capacity: 16,
     minimumHeight: 140,
     category: 'thrill',
+    price: 45,
     status: 'active',
     imageSource: 'https://images.unsplash.com/photo-1517649763961-0c62306601b7?w=800&q=80',
     imageFile: 'roller-coaster.jpg',
@@ -29,6 +31,7 @@ const rideSeeds = [
     capacity: 40,
     minimumHeight: 90,
     category: 'kids',
+    price: 20,
     status: 'active',
     imageSource: 'https://images.unsplash.com/photo-1529553268-fe9c6aeab427?w=800&q=80',
     imageFile: 'carousel.jpg',
@@ -39,6 +42,7 @@ const rideSeeds = [
     capacity: 2,
     minimumHeight: 110,
     category: 'water',
+    price: 35,
     status: 'active',
     imageSource: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=800&q=80',
     imageFile: 'water-slide.jpg',
@@ -49,6 +53,7 @@ const rideSeeds = [
     capacity: 8,
     minimumHeight: 130,
     category: 'thrill',
+    price: 40,
     status: 'maintenance',
     imageSource: 'https://images.unsplash.com/photo-1509248961154-2b5ff4bd378b?w=800&q=80',
     imageFile: 'haunted-house.jpg',
@@ -59,6 +64,7 @@ const rideSeeds = [
     capacity: 500,
     minimumHeight: 0,
     category: 'show',
+    price: 15,
     status: 'active',
     imageSource: 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=800&q=80',
     imageFile: 'light-show.jpg',
@@ -127,6 +133,12 @@ async function seedDatabase() {
     console.log(`Seeded ${rides.length} rides`);
   } else {
     console.log(`Rides already exist (${rideCount}), skipping ride seed`);
+    for (const seed of rideSeeds) {
+      await Ride.updateOne(
+        { name: seed.name, $or: [{ price: { $exists: false } }, { price: null }] },
+        { $set: { price: seed.price } }
+      );
+    }
   }
 
   const couponCount = await Coupon.countDocuments();

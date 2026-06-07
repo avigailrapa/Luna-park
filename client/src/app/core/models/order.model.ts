@@ -7,10 +7,12 @@ export interface Order {
   _id: string;
   userId: string;
   rideId?: RideRef | string | null;
-  ticketType: 'full_day' | 'hourly';
+  ticketType: 'full_day' | 'hourly' | 'ride';
   purchaseDate: string;
   chosenDate: string;
   hoursAmount?: number | null;
+  startHour?: number | null;
+  endHour?: number | null;
   couponCode?: string | null;
   totalPrice: number;
   discountApplied: number;
@@ -20,9 +22,11 @@ export interface Order {
 }
 
 export interface CreateOrderDto {
-  ticketType: 'full_day' | 'hourly';
+  ticketType: 'full_day' | 'hourly' | 'ride';
   chosenDate: string;
   hoursAmount?: number;
+  startHour?: number;
+  endHour?: number;
   rideId?: string;
   couponCode?: string;
 }

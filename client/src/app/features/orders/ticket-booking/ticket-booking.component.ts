@@ -12,12 +12,12 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { OrderService } from '../../../core/services/order.service';
-import { RideService } from '../../../core/services/ride.service';
 import { CouponService } from '../../../core/services/coupon.service';
-import { Ride } from '../../../core/models/ride.model';
 
 const FULL_DAY_PRICE = 50;
 const HOURLY_RATE = 15;
+const PARK_OPEN_HOUR = 9;
+const PARK_CLOSE_HOUR = 22;
 
 @Component({
   selector: 'app-ticket-booking',
@@ -39,7 +39,6 @@ const HOURLY_RATE = 15;
 export class TicketBookingComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly orderService = inject(OrderService);
-  private readonly rideService = inject(RideService);
   private readonly couponService = inject(CouponService);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
@@ -47,13 +46,18 @@ export class TicketBookingComponent implements OnInit {
   protected readonly loading = signal(false);
   protected readonly discountPercent = signal<number | null>(null);
   protected readonly couponMessage = signal<string | null>(null);
-  protected readonly rideList = signal<Ride[]>([]);
+  protected readonly PARK_OPEN_HOUR = PARK_OPEN_HOUR;
+  protected readonly PARK_CLOSE_HOUR = PARK_CLOSE_HOUR;
+  protected readonly hourOptions = Array.from(
+    { length: PARK_CLOSE_HOUR - PARK_OPEN_HOUR + 1 },
+    (_, i) => PARK_OPEN_HOUR + i
+  );
 
   protected readonly form = this.fb.nonNullable.group({
     chosenDate: [null as Date | null, Validators.required],
     ticketType: ['full_day' as 'full_day' | 'hourly', Validators.required],
-    hoursAmount: [3],
-    rideId: [''],
+    startHour: [PARK_OPEN_HOUR],
+    endHour: [12],
     couponCode: [''],
   });
 
@@ -61,16 +65,30 @@ export class TicketBookingComponent implements OnInit {
     initialValue: this.form.controls.ticketType.value,
   });
 
-  protected readonly hoursAmount = toSignal(this.form.controls.hoursAmount.valueChanges, {
-    initialValue: this.form.controls.hoursAmount.value,
+  protected readonly startHour = toSignal(this.form.controls.startHour.valueChanges, {
+    initialValue: this.form.controls.startHour.value,
+  });
+
+  protected readonly endHour = toSignal(this.form.controls.endHour.valueChanges, {
+    initialValue: this.form.controls.endHour.value,
   });
 
   protected readonly isHourly = computed(() => this.ticketType() === 'hourly');
 
+  protected readonly endHourOptions = computed(() => {
+    const start = this.startHour();
+    return this.hourOptions.filter((hour) => hour > start);
+  });
+
+  protected readonly hoursCount = computed(() => {
+    const start = this.startHour();
+    const end = this.endHour();
+    return end > start ? end - start : 0;
+  });
+
   protected readonly basePrice = computed(() => {
     if (this.isHourly()) {
-      const hours = this.hoursAmount() || 0;
-      return HOURLY_RATE * hours;
+      return HOURLY_RATE * this.hoursCount();
     }
     return FULL_DAY_PRICE;
   });
@@ -88,10 +106,15 @@ export class TicketBookingComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.rideService.getRides('active').subscribe({
-      next: (res) => this.rideList.set(res.rides),
-      error: () => this.rideList.set([]),
+    this.form.controls.startHour.valueChanges.subscribe((start) => {
+      if (this.form.controls.endHour.value <= start) {
+        this.form.controls.endHour.setValue(Math.min(start + 1, PARK_CLOSE_HOUR));
+      }
     });
+  }
+
+  protected formatHour(hour: number): string {
+    return `${String(hour).padStart(2, '0')}:00`;
   }
 
   applyCoupon(): void {
@@ -106,15 +129,15 @@ export class TicketBookingComponent implements OnInit {
       next: (res) => {
         if (res.valid && res.discountPercent) {
           this.discountPercent.set(res.discountPercent);
-          this.couponMessage.set(`Coupon applied: ${res.discountPercent}% off`);
+          this.couponMessage.set(`קופון הוחל: ${res.discountPercent}% הנחה`);
         } else {
           this.discountPercent.set(null);
-          this.couponMessage.set(res.message || 'Invalid coupon');
+          this.couponMessage.set(res.message || 'קופון לא תקין');
         }
       },
       error: (err) => {
         this.discountPercent.set(null);
-        this.couponMessage.set(err.error?.message || 'Could not validate coupon');
+        this.couponMessage.set(err.error?.message || 'לא ניתן לאמת את הקופון');
       },
     });
   }
@@ -131,24 +154,29 @@ export class TicketBookingComponent implements OnInit {
       return;
     }
 
+    if (raw.ticketType === 'hourly' && raw.endHour <= raw.startHour) {
+      this.snackBar.open('שעת הסיום חייבת להיות אחרי שעת ההתחלה', 'סגור', { duration: 4000 });
+      return;
+    }
+
     this.loading.set(true);
     this.orderService
       .createOrder({
         ticketType: raw.ticketType,
         chosenDate: chosenDate.toISOString(),
-        hoursAmount: raw.ticketType === 'hourly' ? raw.hoursAmount : undefined,
-        rideId: raw.rideId || undefined,
+        startHour: raw.ticketType === 'hourly' ? raw.startHour : undefined,
+        endHour: raw.ticketType === 'hourly' ? raw.endHour : undefined,
         couponCode: raw.couponCode.trim() || undefined,
       })
       .subscribe({
         next: () => {
-          this.snackBar.open('Ticket booked successfully!', 'Close', { duration: 3000 });
+          this.snackBar.open('הכרטיס הוזמן בהצלחה!', 'סגור', { duration: 3000 });
           this.router.navigate(['/my-orders']);
         },
         error: (err) => {
           this.loading.set(false);
-          const message = err.error?.message || 'Booking failed';
-          this.snackBar.open(message, 'Close', { duration: 5000 });
+          const message = err.error?.message || 'ההזמנה נכשלה';
+          this.snackBar.open(message, 'סגור', { duration: 5000 });
         },
         complete: () => this.loading.set(false),
       });

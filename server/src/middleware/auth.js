@@ -3,7 +3,7 @@ const { verifyToken } = require('../utils/jwt');
 function authMiddleware(req, res, next) {
   const header = req.headers.authorization;
   if (!header || !header.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Authentication required' });
+    return res.status(401).json({ message: 'נדרשת התחברות' });
   }
 
   try {
@@ -11,7 +11,7 @@ function authMiddleware(req, res, next) {
     req.user = verifyToken(token);
     next();
   } catch {
-    return res.status(401).json({ message: 'Invalid or expired token' });
+    return res.status(401).json({ message: 'אסימון לא תקין או שפג תוקפו' });
   }
 }
 

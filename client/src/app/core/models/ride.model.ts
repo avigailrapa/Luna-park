@@ -5,6 +5,7 @@ export interface Ride {
   capacity?: number;
   minimumHeight?: number;
   category?: string;
+  price: number;
   status?: 'active' | 'maintenance';
   imageUrl?: string;
   audioUrl?: string;

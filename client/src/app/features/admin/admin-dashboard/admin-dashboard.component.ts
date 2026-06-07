@@ -17,6 +17,14 @@ import { RideService } from '../../../core/services/ride.service';
 import { CouponService } from '../../../core/services/coupon.service';
 import { environment } from '../../../../environments/environment';
 
+const CATEGORY_LABELS: Record<string, string> = {
+  thrill: 'ריגושים',
+  family: 'משפחה',
+  kids: 'ילדים',
+  water: 'מים',
+  show: 'מופע',
+};
+
 @Component({
   selector: 'app-admin-dashboard',
   imports: [
@@ -50,7 +58,7 @@ export class AdminDashboardComponent implements OnInit {
   protected selectedImage: File | null = null;
   protected selectedAudio: File | null = null;
 
-  protected readonly rideColumns = ['image', 'name', 'category', 'status', 'actions'];
+  protected readonly rideColumns = ['image', 'name', 'price', 'category', 'status', 'actions'];
   protected readonly couponColumns = [
     'image',
     'code',
@@ -66,6 +74,7 @@ export class AdminDashboardComponent implements OnInit {
     description: [''],
     capacity: [4, [Validators.required, Validators.min(1)]],
     minimumHeight: [100, [Validators.required, Validators.min(0)]],
+    price: [25, [Validators.required, Validators.min(0)]],
     category: ['family' as string, Validators.required],
     status: ['active' as 'active' | 'maintenance', Validators.required],
   });
@@ -83,6 +92,16 @@ export class AdminDashboardComponent implements OnInit {
   ngOnInit(): void {
     this.loadRides();
     this.loadCoupons();
+  }
+
+  protected categoryLabel(category?: string): string {
+    return category ? (CATEGORY_LABELS[category] ?? category) : '—';
+  }
+
+  protected statusLabel(status?: string): string {
+    if (status === 'active') return 'פעיל';
+    if (status === 'maintenance') return 'תחזוקה';
+    return status ?? '—';
   }
 
   protected mediaUrl(path?: string): string {
@@ -152,6 +171,7 @@ export class AdminDashboardComponent implements OnInit {
           description: '',
           capacity: 4,
           minimumHeight: 100,
+          price: 25,
           category: 'family',
           status: 'active',
         });
