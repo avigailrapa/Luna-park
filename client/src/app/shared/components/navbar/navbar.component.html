@@ -1,10 +1,13 @@
 <mat-toolbar class="navbar gyg-navbar">
-  <a routerLink="/rides" class="brand">
+  <a routerLink="/" class="brand">
     <mat-icon class="brand-icon">attractions</mat-icon>
     לונה פארק
   </a>
   <span class="spacer"></span>
 
+  <a mat-button routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+    בית
+  </a>
   <a mat-button routerLink="/rides" routerLinkActive="active">מתקנים</a>
 
   @if (auth.isCustomer()) {

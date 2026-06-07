@@ -1,5 +1,4 @@
-import { Component, computed, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, computed, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -44,7 +43,6 @@ const PARK_CLOSE_HOUR = 22;
 })
 export class TicketBookingComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
-  private readonly destroyRef = inject(DestroyRef);
   private readonly orderService = inject(OrderService);
   private readonly couponService = inject(CouponService);
   private readonly router = inject(Router);
@@ -205,7 +203,6 @@ export class TicketBookingComponent implements OnInit, OnDestroy {
           endHour: raw.ticketType === 'hourly' ? raw.endHour : undefined,
           couponCode: raw.couponCode.trim() || undefined,
         })
-        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (res) => {
             this.paying.set(false);

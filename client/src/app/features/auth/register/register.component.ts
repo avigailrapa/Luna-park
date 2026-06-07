@@ -7,6 +7,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../../../core/services/auth.service';
+import { getAuthBackgroundImage } from '../../../core/constants/park-gallery';
 
 @Component({
   selector: 'app-register',
@@ -29,6 +30,7 @@ export class RegisterComponent {
   private readonly snackBar = inject(MatSnackBar);
 
   protected readonly loading = signal(false);
+  protected readonly backgroundImage = `url(${getAuthBackgroundImage()})`;
 
   protected readonly form = this.fb.nonNullable.group({
     name: ['', Validators.required],

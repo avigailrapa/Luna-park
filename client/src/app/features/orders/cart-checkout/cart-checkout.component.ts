@@ -1,5 +1,4 @@
-import { Component, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -36,7 +35,6 @@ import { OrderService } from '../../../core/services/order.service';
 })
 export class CartCheckoutComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
-  private readonly destroyRef = inject(DestroyRef);
   protected readonly cart = inject(CartService);
   private readonly orderService = inject(OrderService);
   private readonly router = inject(Router);
@@ -104,9 +102,7 @@ export class CartCheckoutComponent implements OnInit, OnDestroy {
         })
       );
 
-      forkJoin(requests)
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
+      forkJoin(requests).subscribe({
           next: (results) => {
             this.cart.clear();
             this.paying.set(false);

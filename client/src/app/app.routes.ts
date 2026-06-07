@@ -7,9 +7,10 @@ import { OrderHistoryComponent } from './features/orders/order-history/order-his
 import { RidesCatalogComponent } from './features/rides/rides-catalog/rides-catalog.component';
 import { CartCheckoutComponent } from './features/orders/cart-checkout/cart-checkout.component';
 import { AdminDashboardComponent } from './features/admin/admin-dashboard/admin-dashboard.component';
+import { HomeComponent } from './features/home/home.component';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'rides', pathMatch: 'full' },
+  { path: '', component: HomeComponent },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'rides', component: RidesCatalogComponent },
@@ -33,5 +34,5 @@ export const routes: Routes = [
     component: AdminDashboardComponent,
     canActivate: [authGuard, roleGuard('admin')],
   },
-  { path: '**', redirectTo: 'rides' },
+  { path: '**', redirectTo: '' },
 ];

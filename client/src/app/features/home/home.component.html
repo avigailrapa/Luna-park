@@ -1,0 +1,147 @@
+<div class="home">
+  <section class="hero" aria-label="לונה פארק — ברוכים הבאים">
+    <div class="hero-slides">
+      @for (slide of slides; track trackSlide($index, slide); let i = $index) {
+        <div
+          class="hero-slide"
+          [class.active]="activeSlide() === i"
+          [style.background-image]="'url(' + slide.image + ')'"
+          role="img"
+          [attr.aria-label]="slide.title"
+        >
+          <div class="hero-caption">
+            <span class="caption-title">{{ slide.title }}</span>
+            <span class="caption-sub">{{ slide.subtitle }}</span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="hero-overlay">
+      <div class="hero-content">
+        <p class="eyebrow">ברוכים הבאים ל</p>
+        <h1>לונה פארק</h1>
+        <p class="hero-text">
+          פארק השעשועים המוביל — מתקנים מרהיבים, מופעים חיים וחוויות לכל המשפחה.
+        </p>
+        <div class="hero-actions">
+          @if (auth.isCustomer()) {
+            <a mat-flat-button color="primary" routerLink="/book" class="hero-btn">
+              <mat-icon>confirmation_number</mat-icon>
+              הזמנת כרטיס
+            </a>
+          } @else {
+            <a mat-flat-button color="primary" routerLink="/register" class="hero-btn">
+              <mat-icon>person_add</mat-icon>
+              הרשמה והזמנה
+            </a>
+          }
+          <a mat-stroked-button routerLink="/rides" class="hero-btn secondary">
+            <mat-icon>explore</mat-icon>
+            גלו את המתקנים
+          </a>
+        </div>
+        <div class="hero-stats">
+          <div class="stat">
+            <strong>16+</strong>
+            <span>מתקנים</span>
+          </div>
+          <div class="stat">
+            <strong>4.8</strong>
+            <span>דירוג מבקרים</span>
+          </div>
+          <div class="stat">
+            <strong>09–22</strong>
+            <span>שעות פתיחה</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-dots" role="tablist" aria-label="בחירת תמונה">
+      @for (slide of slides; track trackSlide($index, slide); let i = $index) {
+        <button
+          type="button"
+          class="dot"
+          [class.active]="activeSlide() === i"
+          [attr.aria-selected]="activeSlide() === i"
+          [attr.aria-label]="'תמונה ' + (i + 1)"
+          (click)="goToSlide(i)"
+        ></button>
+      }
+    </div>
+  </section>
+
+  <section class="perks gyg-page">
+    <h2>למה לונה פארק?</h2>
+    <div class="perk-grid">
+      <div class="perk-card">
+        <mat-icon>family_restroom</mat-icon>
+        <h3>לכל המשפחה</h3>
+        <p>מתקנים לילדים, נוער ומבוגרים — כולם מוצאים את החוויה שלהם.</p>
+      </div>
+      <div class="perk-card">
+        <mat-icon>qr_code</mat-icon>
+        <h3>כרטיס דיגיטלי</h3>
+        <p>הזמנה מהירה, ברקוד לכניסה ואישור ישיר לאימייל.</p>
+      </div>
+      <div class="perk-card">
+        <mat-icon>celebration</mat-icon>
+        <h3>אירועים מיוחדים</h3>
+        <p>מופעי ערב, חגים ואטרקציות עונתיות לאורך כל השנה.</p>
+      </div>
+    </div>
+  </section>
+
+  @if (featuredRides().length > 0) {
+    <section class="featured gyg-page">
+      <div class="featured-header">
+        <div>
+          <h2>אהובים על המבקרים</h2>
+          <p>טעימה מהפארק — לכל הקטלוג המלא לחצו למטה</p>
+        </div>
+        <a mat-stroked-button routerLink="/rides">כל המתקנים</a>
+      </div>
+
+      <div class="featured-grid">
+        @for (ride of featuredRides(); track ride._id) {
+          <mat-card class="featured-card">
+            <div class="featured-img">
+              <img [src]="mediaUrl(ride.imageUrl)" [alt]="ride.name" loading="lazy" />
+              <span class="featured-price">₪{{ ride.price }}</span>
+            </div>
+            <mat-card-header>
+              <mat-card-title>{{ ride.name }}</mat-card-title>
+              <mat-card-subtitle>{{ categoryLabel(ride.category) }}</mat-card-subtitle>
+            </mat-card-header>
+            <mat-card-content>
+              <p>{{ ride.description }}</p>
+            </mat-card-content>
+          </mat-card>
+        }
+      </div>
+
+      <div class="featured-cta">
+        <a mat-flat-button color="primary" routerLink="/rides" class="cta-wide">
+          <mat-icon>attractions</mat-icon>
+          לכל המתקנים והזמנות
+        </a>
+      </div>
+    </section>
+  }
+
+  <section class="bottom-cta">
+    <div class="bottom-cta-inner gyg-page">
+      <h2>מוכנים ליום כיף?</h2>
+      <p>הזמינו כרטיס כניסה או בחרו מתקנים בודדים מהקטלוג המלא.</p>
+      <div class="bottom-actions">
+        @if (auth.isCustomer()) {
+          <a mat-flat-button color="primary" routerLink="/book">הזמנת כרטיס כניסה</a>
+        } @else {
+          <a mat-flat-button color="primary" routerLink="/register">הרשמה עכשיו</a>
+        }
+        <a mat-stroked-button routerLink="/rides">צפייה במתקנים</a>
+      </div>
+    </div>
+  </section>
+</div>

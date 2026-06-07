@@ -6,7 +6,7 @@
   padding: 2rem 1rem;
   background:
     linear-gradient(rgba(26, 43, 73, 0.55), rgba(26, 43, 73, 0.65)),
-    url('http://localhost:3000/uploads/images/light-show.jpg') center / cover no-repeat;
+    var(--auth-bg-image) center / cover no-repeat;
 }
 
 mat-card {
