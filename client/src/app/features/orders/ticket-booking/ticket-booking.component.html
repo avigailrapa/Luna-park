@@ -1,0 +1,69 @@
+<div class="page">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Book a Ticket</mat-card-title>
+      <mat-card-subtitle>Choose your visit date and ticket type</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="form" (ngSubmit)="submit()">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Visit date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="chosenDate" />
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+
+        <div class="ticket-type">
+          <label>Ticket type</label>
+          <mat-radio-group formControlName="ticketType">
+            <mat-radio-button value="full_day">Full Day ($50)</mat-radio-button>
+            <mat-radio-button value="hourly">Hourly ($15/hour)</mat-radio-button>
+          </mat-radio-group>
+        </div>
+
+        @if (isHourly()) {
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-label>Hours</mat-label>
+            <input matInput type="number" min="1" formControlName="hoursAmount" />
+          </mat-form-field>
+        }
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Preferred ride (optional)</mat-label>
+          <mat-select formControlName="rideId">
+            <mat-option value="">None</mat-option>
+            @for (ride of rideList(); track ride._id) {
+              <mat-option [value]="ride._id">{{ ride.name }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <div class="coupon-row">
+          <mat-form-field appearance="outline" class="coupon-field">
+            <mat-label>Coupon code (optional)</mat-label>
+            <input matInput formControlName="couponCode" />
+          </mat-form-field>
+          <button mat-stroked-button type="button" (click)="applyCoupon()">Apply</button>
+        </div>
+        @if (couponMessage()) {
+          <p class="coupon-msg">{{ couponMessage() }}</p>
+        }
+
+        <div class="price-summary">
+          <p>Base price: <strong>${{ basePrice() }}</strong></p>
+          @if (discountApplied() > 0) {
+            <p class="discount">Discount: -${{ discountApplied() }}</p>
+            <p class="final">Final price: <strong>${{ finalPrice() }}</strong></p>
+          } @else {
+            <p>Total: <strong>${{ finalPrice() }}</strong></p>
+          }
+        </div>
+
+        <button mat-flat-button color="primary" type="submit" [disabled]="loading()">
+          {{ loading() ? 'Booking...' : 'Complete Booking' }}
+        </button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>

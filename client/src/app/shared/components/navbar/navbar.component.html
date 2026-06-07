@@ -1,0 +1,23 @@
+<mat-toolbar color="primary" class="navbar">
+  <a routerLink="/rides" class="brand">Luna-park</a>
+  <span class="spacer"></span>
+
+  <a mat-button routerLink="/rides" routerLinkActive="active">Rides</a>
+
+  @if (auth.isCustomer()) {
+    <a mat-button routerLink="/book" routerLinkActive="active">Book Ticket</a>
+    <a mat-button routerLink="/my-orders" routerLinkActive="active">My Orders</a>
+  }
+
+  @if (auth.isAdmin()) {
+    <a mat-button routerLink="/admin" routerLinkActive="active">Admin</a>
+  }
+
+  @if (auth.isAuthenticated()) {
+    <span class="user-label">{{ auth.user()?.name }}</span>
+    <button mat-button type="button" (click)="auth.logout()">Logout</button>
+  } @else {
+    <a mat-button routerLink="/login" routerLinkActive="active">Login</a>
+    <a mat-button routerLink="/register" routerLinkActive="active">Register</a>
+  }
+</mat-toolbar>

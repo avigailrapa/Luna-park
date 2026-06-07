@@ -1,0 +1,24 @@
+.navbar {
+  gap: 0.25rem;
+}
+
+.brand {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  margin-right: 1rem;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.user-label {
+  margin: 0 0.5rem;
+  opacity: 0.9;
+  font-size: 0.875rem;
+}
+
+a.active {
+  font-weight: 600;
+}

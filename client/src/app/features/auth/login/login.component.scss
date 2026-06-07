@@ -1,0 +1,21 @@
+.auth-page {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+mat-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+.full-width {
+  width: 100%;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+button[type='submit'] {
+  width: 100%;
+  margin-top: 0.5rem;
+}
