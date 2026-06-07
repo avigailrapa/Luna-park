@@ -1,0 +1,81 @@
+@if (!isOpen()) {
+  <button type="button" class="gemini-fab" (click)="toggle()" aria-label="פתיחת סוכן לונה פארק">
+    <span class="fab-glow"></span>
+    <mat-icon>smart_toy</mat-icon>
+  </button>
+} @else {
+  <div class="gemini-panel" role="dialog" aria-label="סוכן לונה פארק">
+    <header class="panel-header">
+      <div class="header-brand">
+        <span class="avatar">
+          <mat-icon>attractions</mat-icon>
+        </span>
+        <div>
+          <strong>סוכן לונה פארק</strong>
+          <span>עוזר אישי בעברית</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <a mat-icon-button routerLink="/cart-checkout" aria-label="לסל הקניות" (click)="close()">
+          <mat-icon>shopping_cart</mat-icon>
+        </a>
+        <button mat-icon-button type="button" (click)="close()" aria-label="סגירה">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </header>
+
+    <div class="panel-messages" #messagesEl>
+      @for (msg of messages(); track $index) {
+        <div class="msg-row" [class.user]="msg.role === 'user'" [class.agent]="msg.role === 'agent'">
+          @if (msg.role === 'agent') {
+            <span class="msg-avatar"><mat-icon>attractions</mat-icon></span>
+          }
+          <div class="msg-content">
+            <div class="msg-bubble" [class.error]="msg.success === false">
+              {{ msg.text }}
+            </div>
+            @if (msg.ridePicker?.length) {
+              <div class="ride-picker">
+                @for (ride of msg.ridePicker; track ride._id; let i = $index) {
+                  <button type="button" class="ride-pick" (click)="pickRide(ride)" [disabled]="loading()">
+                    <span class="num">{{ i + 1 }}</span>
+                    <span class="name">{{ ride.name }}</span>
+                    <span class="price">₪{{ ride.price }}</span>
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        </div>
+      }
+      @if (loading()) {
+        <div class="msg-row agent">
+          <span class="msg-avatar"><mat-icon>attractions</mat-icon></span>
+          <div class="msg-bubble typing">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      }
+    </div>
+
+    <div class="panel-suggestions">
+      @for (chip of suggestions; track chip) {
+        <button type="button" class="chip" (click)="send(chip)" [disabled]="loading()">{{ chip }}</button>
+      }
+    </div>
+
+    <form class="panel-input" (ngSubmit)="send()">
+      <input
+        [(ngModel)]="input"
+        name="message"
+        placeholder="שאלי אותי משהו..."
+        autocomplete="off"
+        [disabled]="loading()"
+      />
+      <button type="submit" [disabled]="loading() || !input.trim()" aria-label="שליחה">
+        <mat-icon>arrow_upward</mat-icon>
+      </button>
+    </form>
+  </div>
+}

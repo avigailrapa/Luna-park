@@ -1,0 +1,57 @@
+<div class="agent-page">
+  <header class="agent-header">
+    <div>
+      <h1>
+        <mat-icon>smart_toy</mat-icon>
+        סוכן לונה פארק
+      </h1>
+      <p>מבצע GET, POST, PUT, DELETE — הזמנות, מתקנים, קופונים ועוד</p>
+    </div>
+    @if (auth.isAuthenticated()) {
+      <span class="role-badge">{{ auth.user()?.name }} · {{ auth.user()?.role }}</span>
+    } @else {
+      <span class="role-badge guest">אורח — התחברי לפעולות אישיות</span>
+    }
+  </header>
+
+  <mat-card class="chat-card">
+    <div class="messages" role="log" aria-live="polite">
+      @for (msg of messages(); track $index) {
+        <div class="bubble" [class.user]="msg.role === 'user'" [class.agent]="msg.role === 'agent'" [class.error]="msg.success === false">
+          <pre>{{ msg.text }}</pre>
+          @if (msg.data) {
+            <details>
+              <summary>נתונים מלאים (JSON)</summary>
+              <pre class="json">{{ msg.data | json }}</pre>
+            </details>
+          }
+        </div>
+      }
+      @if (loading()) {
+        <div class="bubble agent loading">
+          <mat-spinner diameter="22"></mat-spinner>
+          <span>מבצע פעולה...</span>
+        </div>
+      }
+    </div>
+
+    <div class="quick-actions">
+      @for (action of quickActions; track action.label) {
+        @if (canUseQuick(action)) {
+          <button mat-stroked-button type="button" (click)="send(action.message)">{{ action.label }}</button>
+        }
+      }
+    </div>
+
+    <form class="composer" (ngSubmit)="send()">
+      <mat-form-field appearance="outline" class="input-field">
+        <mat-label>כתבי פקודה בעברית או JSON</mat-label>
+        <input matInput [(ngModel)]="input" name="message" autocomplete="off" [disabled]="loading()" />
+      </mat-form-field>
+      <button mat-flat-button color="primary" type="submit" [disabled]="loading() || !input.trim()">
+        <mat-icon>send</mat-icon>
+        שליחה
+      </button>
+    </form>
+  </mat-card>
+</div>

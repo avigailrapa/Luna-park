@@ -8,7 +8,6 @@ import { RidesCatalogComponent } from './features/rides/rides-catalog/rides-cata
 import { CartCheckoutComponent } from './features/orders/cart-checkout/cart-checkout.component';
 import { AdminDashboardComponent } from './features/admin/admin-dashboard/admin-dashboard.component';
 import { HomeComponent } from './features/home/home.component';
-
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'login', component: LoginComponent },

@@ -45,3 +45,4 @@ function shabbatMiddleware(req, res, next) {
 }
 
 module.exports = shabbatMiddleware;
+module.exports.isShabbatOrHoliday = isShabbatOrHoliday;

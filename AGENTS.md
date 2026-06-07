@@ -72,15 +72,37 @@ project/
 |--------|------|--------|
 | POST | `/api/auth/register` | Public |
 | POST | `/api/auth/login` | Public |
+| GET | `/api/rides` | Public |
+| GET | `/api/rides/:id` | Public |
+| POST | `/api/rides` | Admin (multipart) |
+| PUT | `/api/rides/:id` | Admin (multipart) |
+| DELETE | `/api/rides/:id` | Admin |
+| GET | `/api/coupons/validate?code=` | Public |
+| GET | `/api/coupons` | Admin |
+| POST | `/api/coupons` | Admin |
+| PUT | `/api/coupons/:id` | Admin |
+| DELETE | `/api/coupons/:id` | Admin |
 | POST | `/api/orders` | Customer (JWT; blocked on Shabbat/holidays) |
 | GET | `/api/orders/my-orders` | Customer |
+| GET | `/api/orders/my-orders/:id/barcode` | Customer |
+| GET | `/api/orders/validate/:code` | Admin |
 | GET | `/api/orders` | Admin |
+| GET | `/api/health` | Public |
+| POST | `/api/agent/chat` | Optional JWT |
+| POST | `/api/agent/execute` | Optional JWT |
+| GET | `/api/agent/tools` | Optional JWT |
 
-### Planned / partial modules
+### Luna Park Agent (`/agent` in client, `/api/agent` on server)
 
-- `GET /api/rides` — client `RideService` exists; server routes/model missing
-- `GET /api/coupons/validate` — client `CouponService` exists; server routes/model missing
-- Admin dashboard — placeholder component only
+Natural-language assistant that proxies all CRUD operations. Hebrew examples:
+
+- `הצג מתקנים` → GET rides
+- `ההזמנות שלי` → GET my orders (customer JWT)
+- `הזמן כרטיס יום מלא ל-2026-06-15` → POST order
+- `בדוק קופון SUMMER20` → validate coupon
+- `{"tool":"list_rides","params":{}}` → direct tool execution
+
+Agent code: `server/src/agent/`, `client/src/app/features/agent/`
 
 ## Code Style
 

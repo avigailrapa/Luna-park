@@ -10,6 +10,7 @@ const authRoutes = require('./routes/authRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const rideRoutes = require('./routes/rideRoutes');
 const couponRoutes = require('./routes/couponRoutes');
+const agentRoutes = require('./routes/agentRoutes');
 const { seedDatabase } = require('./seed/seedData');
 
 const app = express();
@@ -30,6 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/rides', rideRoutes);
 app.use('/api/coupons', couponRoutes);
+app.use('/api/agent', agentRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'luna-park-api' });
