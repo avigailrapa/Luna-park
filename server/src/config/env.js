@@ -1,3 +1,5 @@
+const path = require('path');
+
 require('dotenv').config();
 
 module.exports = {
@@ -7,4 +9,5 @@ module.exports = {
   nodeEnv: process.env.NODE_ENV || 'development',
   fullDayPrice: Number(process.env.FULL_DAY_PRICE) || 50,
   hourlyRate: Number(process.env.HOURLY_RATE) || 15,
+  uploadDir: process.env.UPLOAD_DIR || path.join(__dirname, '../../uploads'),
 };
