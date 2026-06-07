@@ -70,6 +70,30 @@ npm start
 
 App: `http://localhost:4200`
 
+## Live demo link (GitHub Pages)
+
+After pushing to `main`, the site is published automatically to:
+
+**https://sarigetsel.github.io/Luna-park/**
+
+### One-time GitHub setup
+
+1. Open the repo on GitHub → **Settings** → **Pages**
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**
+3. Push to `main` (or run the **Deploy site to GitHub Pages** workflow manually)
+
+### Backend for the live site
+
+GitHub Pages hosts only the Angular frontend. The API must run in the cloud (for example [Render](https://render.com)):
+
+1. Create a free [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) cluster and copy the connection string
+2. On Render, create a **Web Service** from this repo (or import `render.yaml`)
+3. Set environment variables: `MONGO_URI`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, and optional SMTP vars
+4. Ensure `CLIENT_ORIGINS` includes `https://sarigetsel.github.io`
+5. The frontend expects the API at `https://luna-park-api.onrender.com` (see `client/src/environments/environment.prod.ts`)
+
+Share the GitHub Pages URL with anyone — they can browse the site without installing anything locally.
+
 ## API
 
 | Method | Path | Access |

@@ -22,4 +22,8 @@ module.exports = {
   smtpUser: (process.env.SMTP_USER || '').trim(),
   smtpPass: (process.env.SMTP_PASS || '').replace(/\s/g, ''),
   emailFrom: process.env.EMAIL_FROM || 'לונה פארק <noreply@luna-park.local>',
+  clientOrigins: (process.env.CLIENT_ORIGINS || 'http://localhost:4200')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean),
 };

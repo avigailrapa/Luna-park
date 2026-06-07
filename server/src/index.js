@@ -3,7 +3,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const connectDB = require('./config/db');
-const { port, nodeEnv, uploadDir } = require('./config/env');
+const { port, nodeEnv, uploadDir, clientOrigins } = require('./config/env');
 const { requestLogger, errorLogger } = require('./middleware/logger');
 
 const authRoutes = require('./routes/authRoutes');
@@ -23,7 +23,18 @@ for (const sub of ['images', 'audio']) {
 }
 
 app.use(requestLogger);
-app.use(cors({ origin: 'http://localhost:4200' }));
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin || clientOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error('Not allowed by CORS'));
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
 app.use('/uploads', express.static(uploadDir));
 
