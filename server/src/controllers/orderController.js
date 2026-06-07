@@ -137,8 +137,13 @@ async function createOrder(req, res, next) {
 
     await order.populate('rideId', 'name');
 
-    const user = await User.findById(req.user.id);
-    const emailResult = await sendOrderConfirmationEmail(user, order);
+    let emailResult = { sent: false, reason: 'email_error' };
+    try {
+      const user = await User.findById(req.user.id);
+      emailResult = await sendOrderConfirmationEmail(user, order);
+    } catch (err) {
+      console.error(`Order ${order._id} confirmation failed:`, err.message);
+    }
 
     const message = emailResult.sent
       ? 'ההזמנה בוצעה בהצלחה. אישור נשלח לאימייל שלך.'

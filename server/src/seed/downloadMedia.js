@@ -38,7 +38,14 @@ async function downloadImage(url, filename) {
   if (fs.existsSync(dest)) {
     return `/uploads/images/${filename}`;
   }
-  await downloadFile(url, dest);
+  try {
+    await downloadFile(url, dest);
+  } catch (err) {
+    if (fs.existsSync(dest)) {
+      fs.unlinkSync(dest);
+    }
+    throw err;
+  }
   return `/uploads/images/${filename}`;
 }
 

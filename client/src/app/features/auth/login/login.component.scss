@@ -1,12 +1,23 @@
 .auth-page {
+  min-height: calc(100vh - 64px);
   display: flex;
+  align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
+  background:
+    linear-gradient(rgba(26, 43, 73, 0.55), rgba(26, 43, 73, 0.65)),
+    url('http://localhost:3000/uploads/images/light-show.jpg') center / cover no-repeat;
 }
 
 mat-card {
   width: 100%;
   max-width: 420px;
+  border-radius: var(--gyg-radius-lg) !important;
+}
+
+mat-card-header mat-card-title {
+  font-weight: 700;
+  color: var(--gyg-navy);
 }
 
 .full-width {
@@ -18,4 +29,9 @@ mat-card {
 button[type='submit'] {
   width: 100%;
   margin-top: 0.5rem;
+  height: 44px;
+}
+
+mat-card-actions a {
+  font-weight: 600;
 }

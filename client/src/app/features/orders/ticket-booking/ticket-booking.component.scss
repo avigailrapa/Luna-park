@@ -1,7 +1,96 @@
-.page {
-  max-width: 560px;
-  margin: 0 auto;
-  padding: 2rem 1rem;
+.book-header {
+  margin-bottom: 1.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--gyg-orange);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.book-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(1.375rem, 2.5vw, 1.875rem);
+}
+
+.subtitle {
+  margin: 0.75rem 0 1rem;
+  color: var(--gyg-text-muted);
+  line-height: 1.6;
+  max-width: 56ch;
+}
+
+.highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.highlights .gyg-chip mat-icon {
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+}
+
+.book-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) minmax(320px, 480px);
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.book-visual {
+  position: sticky;
+  top: 1rem;
+  border-radius: var(--gyg-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--gyg-shadow);
+}
+
+.hero-photo {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
+.visual-overlay {
+  background: var(--gyg-surface);
+  padding: 1.25rem;
+
+  h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1rem;
+  }
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: var(--gyg-text-muted);
+    font-size: 0.9375rem;
+  }
+
+  mat-icon {
+    color: var(--gyg-orange);
+    font-size: 1.125rem;
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+}
+
+.book-card {
+  margin: 0;
 }
 
 .full-width {
@@ -19,7 +108,7 @@
 .hours-note {
   margin: 0 0 1rem;
   font-size: 0.875rem;
-  color: #555;
+  color: var(--gyg-text-muted);
 }
 
 .ticket-type {
@@ -29,7 +118,7 @@
     display: block;
     margin-bottom: 0.5rem;
     font-size: 0.875rem;
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--gyg-text-muted);
   }
 
   mat-radio-button {
@@ -51,12 +140,13 @@
 .coupon-msg {
   font-size: 0.875rem;
   margin: 0 0 1rem;
-  color: #555;
+  color: var(--gyg-text-muted);
 }
 
 .price-summary {
-  background: #f5f5f5;
-  border-radius: 8px;
+  background: var(--gyg-background);
+  border: 1px solid var(--gyg-border);
+  border-radius: var(--gyg-radius-md);
   padding: 1rem;
   margin: 1rem 0;
 
@@ -76,7 +166,8 @@
 .section-title {
   margin: 0 0 0.75rem;
   font-size: 1rem;
-  color: #333;
+  color: var(--gyg-navy);
+  font-weight: 700;
 }
 
 .section-title:not(:first-child) {
@@ -86,10 +177,11 @@
 .demo-hint {
   margin: 0 0 1rem;
   font-size: 0.8125rem;
-  color: #666;
-  background: #fff8e1;
+  color: var(--gyg-text-muted);
+  background: var(--gyg-orange-light);
   padding: 0.5rem 0.75rem;
-  border-radius: 6px;
+  border-radius: var(--gyg-radius-sm);
+  border: 1px solid rgba(255, 85, 51, 0.15);
 }
 
 .card-row {
@@ -102,11 +194,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #f5f5f5;
-  border-radius: 8px;
-  padding: 1rem;
+  background: var(--gyg-navy);
+  color: #fff;
+  border-radius: var(--gyg-radius-md);
+  padding: 1rem 1.25rem;
   margin: 1rem 0;
   font-size: 1.125rem;
+
+  strong {
+    color: #fff;
+    font-size: 1.375rem;
+  }
 }
 
 .pay-btn {
@@ -120,9 +218,19 @@
   justify-content: center;
   gap: 0.75rem;
   margin-top: 1rem;
-  color: #555;
+  color: var(--gyg-text-muted);
 }
 
 button[type='submit'] {
   width: 100%;
+}
+
+@media (max-width: 900px) {
+  .book-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .book-visual {
+    position: static;
+  }
 }

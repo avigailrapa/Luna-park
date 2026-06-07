@@ -1,5 +1,8 @@
-<mat-toolbar color="primary" class="navbar">
-  <a routerLink="/rides" class="brand">לונה פארק</a>
+<mat-toolbar class="navbar gyg-navbar">
+  <a routerLink="/rides" class="brand">
+    <mat-icon class="brand-icon">attractions</mat-icon>
+    לונה פארק
+  </a>
   <span class="spacer"></span>
 
   <a mat-button routerLink="/rides" routerLinkActive="active">מתקנים</a>
@@ -26,9 +29,9 @@
 
   @if (auth.isAuthenticated()) {
     <span class="user-label">{{ auth.user()?.name }}</span>
-    <button mat-button type="button" (click)="auth.logout()">התנתקות</button>
+    <button mat-stroked-button type="button" (click)="auth.logout()">התנתקות</button>
   } @else {
     <a mat-button routerLink="/login" routerLinkActive="active">התחברות</a>
-    <a mat-button routerLink="/register" routerLinkActive="active">הרשמה</a>
+    <a mat-flat-button color="primary" routerLink="/register" routerLinkActive="active">הרשמה</a>
   }
 </mat-toolbar>

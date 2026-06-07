@@ -1,4 +1,5 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -15,6 +16,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { OrderService } from '../../../core/services/order.service';
 import { CouponService } from '../../../core/services/coupon.service';
+import { getDefaultParkImage } from '../../../core/constants/park-gallery';
 
 const FULL_DAY_PRICE = 50;
 const HOURLY_RATE = 15;
@@ -40,15 +42,18 @@ const PARK_CLOSE_HOUR = 22;
   templateUrl: './ticket-booking.component.html',
   styleUrl: './ticket-booking.component.scss',
 })
-export class TicketBookingComponent implements OnInit {
+export class TicketBookingComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly orderService = inject(OrderService);
   private readonly couponService = inject(CouponService);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
 
+  protected readonly galleryImage = getDefaultParkImage();
   protected readonly paying = signal(false);
   protected readonly paymentDone = signal(false);
+  private paymentTimer: ReturnType<typeof setTimeout> | null = null;
   protected readonly discountPercent = signal<number | null>(null);
   protected readonly couponMessage = signal<string | null>(null);
   protected readonly PARK_OPEN_HOUR = PARK_OPEN_HOUR;
@@ -122,6 +127,13 @@ export class TicketBookingComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    if (this.paymentTimer !== null) {
+      clearTimeout(this.paymentTimer);
+      this.paymentTimer = null;
+    }
+  }
+
   protected formatHour(hour: number): string {
     return `${String(hour).padStart(2, '0')}:00`;
   }
@@ -182,7 +194,8 @@ export class TicketBookingComponent implements OnInit {
     this.paying.set(true);
     this.paymentDone.set(false);
 
-    setTimeout(() => {
+    this.paymentTimer = setTimeout(() => {
+      this.paymentTimer = null;
       this.paymentDone.set(true);
       this.orderService
         .createOrder({
@@ -192,6 +205,7 @@ export class TicketBookingComponent implements OnInit {
           endHour: raw.ticketType === 'hourly' ? raw.endHour : undefined,
           couponCode: raw.couponCode.trim() || undefined,
         })
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (res) => {
             this.paying.set(false);

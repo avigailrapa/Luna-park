@@ -1,4 +1,5 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -33,8 +34,9 @@ import { OrderService } from '../../../core/services/order.service';
   templateUrl: './cart-checkout.component.html',
   styleUrl: './cart-checkout.component.scss',
 })
-export class CartCheckoutComponent implements OnInit {
+export class CartCheckoutComponent implements OnInit, OnDestroy {
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
   protected readonly cart = inject(CartService);
   private readonly orderService = inject(OrderService);
   private readonly router = inject(Router);
@@ -42,6 +44,7 @@ export class CartCheckoutComponent implements OnInit {
 
   protected readonly paying = signal(false);
   protected readonly paymentDone = signal(false);
+  private paymentTimer: ReturnType<typeof setTimeout> | null = null;
 
   protected readonly form = this.fb.nonNullable.group({
     chosenDate: [null as Date | null, Validators.required],
@@ -54,6 +57,13 @@ export class CartCheckoutComponent implements OnInit {
   ngOnInit(): void {
     if (this.cart.count() === 0) {
       this.router.navigate(['/rides']);
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.paymentTimer !== null) {
+      clearTimeout(this.paymentTimer);
+      this.paymentTimer = null;
     }
   }
 
@@ -82,7 +92,8 @@ export class CartCheckoutComponent implements OnInit {
     this.paying.set(true);
     this.paymentDone.set(false);
 
-    setTimeout(() => {
+    this.paymentTimer = setTimeout(() => {
+      this.paymentTimer = null;
       this.paymentDone.set(true);
       const dateIso = chosenDate.toISOString();
       const requests = this.cart.cartItems().map((ride) =>
@@ -93,23 +104,32 @@ export class CartCheckoutComponent implements OnInit {
         })
       );
 
-      forkJoin(requests).subscribe({
-        next: () => {
-          this.cart.clear();
-          this.paying.set(false);
-          this.snackBar.open(
-            'התשלום בוצע! אישורים עם ברקוד נשלחו לאימייל שלך.',
-            'סגור',
-            { duration: 5000 }
-          );
-          this.router.navigate(['/my-orders']);
-        },
-        error: (err) => {
-          this.paying.set(false);
-          this.paymentDone.set(false);
-          this.snackBar.open(err.error?.message || 'ההזמנה נכשלה', 'סגור', { duration: 5000 });
-        },
-      });
+      forkJoin(requests)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (results) => {
+            this.cart.clear();
+            this.paying.set(false);
+            const allEmailed = results.every((res) => res.emailSent);
+            const anyEmailed = results.some((res) => res.emailSent);
+            let msg = 'התשלום בוצע! ההזמנות בוצעו בהצלחה.';
+            if (allEmailed) {
+              msg = 'התשלום בוצע! אישורים עם ברקוד נשלחו לאימייל שלך.';
+            } else if (anyEmailed) {
+              msg +=
+                ' חלק מהאישורים נשלחו לאימייל — לשאר לחצי "הצג ברקוד" בהזמנות שלי.';
+            } else {
+              msg += ' הציגי את הברקוד ב"ההזמנות שלי".';
+            }
+            this.snackBar.open(msg, 'סגור', { duration: 7000 });
+            this.router.navigate(['/my-orders']);
+          },
+          error: (err) => {
+            this.paying.set(false);
+            this.paymentDone.set(false);
+            this.snackBar.open(err.error?.message || 'ההזמנה נכשלה', 'סגור', { duration: 5000 });
+          },
+        });
     }, 1500);
   }
 }

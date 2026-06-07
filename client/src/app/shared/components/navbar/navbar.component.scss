@@ -1,12 +1,33 @@
+.gyg-navbar {
+  background: var(--gyg-surface) !important;
+  color: var(--gyg-navy) !important;
+  border-bottom: 1px solid var(--gyg-border);
+  box-shadow: 0 1px 0 rgba(26, 43, 73, 0.04);
+  gap: 0.15rem;
+  padding-inline: 1.25rem;
+  min-height: 64px;
+}
+
 .navbar {
   gap: 0.25rem;
 }
 
 .brand {
-  color: inherit;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--gyg-navy);
+  font-weight: 700;
+  font-size: 1.125rem;
   text-decoration: none;
-  margin-right: 1rem;
+  margin-inline-end: 1rem;
+}
+
+.brand-icon {
+  color: var(--gyg-orange);
+  font-size: 1.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .spacer {
@@ -15,10 +36,19 @@
 
 .user-label {
   margin: 0 0.5rem;
-  opacity: 0.9;
+  color: var(--gyg-text-muted);
   font-size: 0.875rem;
 }
 
 a.active {
+  color: var(--gyg-orange) !important;
   font-weight: 600;
+}
+
+.gyg-navbar a.mat-mdc-button {
+  color: var(--gyg-navy);
+}
+
+.gyg-navbar a.mat-mdc-button:hover {
+  color: var(--gyg-orange);
 }
