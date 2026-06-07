@@ -31,7 +31,6 @@ export class LoginComponent {
 
   protected readonly loading = signal(false);
   protected readonly backgroundImage = `url(${getAuthBackgroundImage()})`;
-
   protected readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', Validators.required],

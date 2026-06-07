@@ -1,0 +1,37 @@
+<h2 mat-dialog-title>כרטיס כניסה</h2>
+<mat-dialog-content class="dialog-content" id="ticket-print-area">
+  <p><strong>קוד:</strong> {{ data.ticketCode }}</p>
+  <p><strong>תאריך ביקור:</strong> {{ data.chosenDate | date: 'dd/MM/yyyy' }}</p>
+  @if (loading()) {
+    <mat-spinner diameter="40" />
+  } @else if (barcodeUrl()) {
+    <img [src]="barcodeUrl()!" [alt]="'ברקוד ' + data.ticketCode" class="barcode-img" />
+    <p class="hint">הציגו ברקוד זה בכניסה ללונה פארק</p>
+
+    <mat-form-field appearance="outline" class="email-field">
+      <mat-label>שליחה לאימייל</mat-label>
+      <input matInput type="email" [(ngModel)]="recipientEmail" placeholder="example@mail.com" />
+      <mat-hint>ניתן לשלוח לכל כתובת שתרצי</mat-hint>
+    </mat-form-field>
+  } @else {
+    <p>לא ניתן לטעון ברקוד</p>
+  }
+</mat-dialog-content>
+<mat-dialog-actions align="end" class="dialog-actions">
+  @if (barcodeUrl()) {
+    <button mat-stroked-button type="button" (click)="printTicket()">
+      <mat-icon>print</mat-icon>
+      הדפסה
+    </button>
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="sendEmail()"
+      [disabled]="emailSending() || !recipientEmail.trim()"
+    >
+      <mat-icon>email</mat-icon>
+      {{ emailSending() ? 'שולח...' : 'שליחה למייל' }}
+    </button>
+  }
+  <button mat-button mat-dialog-close>סגור</button>
+</mat-dialog-actions>

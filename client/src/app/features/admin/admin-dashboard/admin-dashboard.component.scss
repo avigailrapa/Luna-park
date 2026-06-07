@@ -9,8 +9,41 @@ h1 {
 }
 
 .subtitle {
-  margin: 0 0 1.5rem;
-  color: #666;
+  margin: 0 0 1rem;
+  color: var(--gyg-text-muted, #666);
+}
+
+.info-banner {
+  margin-bottom: 1.5rem;
+  background: var(--gyg-orange-light, #fff0ec);
+  border: 1px solid rgba(255, 85, 51, 0.2);
+
+  h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+    color: var(--gyg-navy);
+  }
+
+  ul {
+    margin: 0;
+    padding-inline-start: 1.2rem;
+    line-height: 1.6;
+    font-size: 0.9rem;
+  }
+
+  .demo-coupons {
+    margin: 0.75rem 0 0;
+    font-size: 0.85rem;
+    color: var(--gyg-text-muted, #666);
+
+    code {
+      background: #fff;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+      font-weight: 600;
+      color: var(--gyg-orange-dark);
+    }
+  }
 }
 
 .tab-content {

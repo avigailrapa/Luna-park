@@ -6,12 +6,37 @@ const {
   smtpPort,
   smtpUser,
   smtpPass,
-  emailFrom,
   nodeEnv,
 } = require('../config/env');
+
+function getFromAddress() {
+  if (smtpUser) {
+    return `"לונה פארק" <${smtpUser}>`;
+  }
+  return 'לונה פארק <noreply@luna-park.local>';
+}
 const { generateBarcodePng } = require('./barcode');
 
 const ticketsLogDir = path.join(__dirname, '../../logs/tickets');
+
+let devTransporterPromise = null;
+
+async function getDevTransporter() {
+  if (!devTransporterPromise) {
+    devTransporterPromise = (async () => {
+      const testAccount = await nodemailer.createTestAccount();
+      const transport = nodemailer.createTransport({
+        host: testAccount.smtp.host,
+        port: testAccount.smtp.port,
+        secure: testAccount.smtp.secure,
+        auth: { user: testAccount.user, pass: testAccount.pass },
+      });
+      console.log('Dev email: using Ethereal test account (no SMTP in .env)');
+      return transport;
+    })();
+  }
+  return devTransporterPromise;
+}
 
 function formatTicketType(order) {
   if (order.ticketType === 'full_day') {
@@ -93,46 +118,79 @@ async function saveTicketLocally(userEmail, order, barcodeBuffer, html) {
   return `logs/tickets/${order.ticketCode}.html`;
 }
 
-async function sendOrderConfirmationEmail(user, order) {
-  if (!user?.email || !order?.ticketCode) {
+async function sendOrderConfirmationEmail(user, order, recipientEmail) {
+  const to = (recipientEmail || user?.email || '').trim().toLowerCase();
+  if (!to || !order?.ticketCode) {
     return { sent: false, reason: 'missing_data' };
   }
 
   const barcodeBuffer = await generateBarcodePng(order.ticketCode);
-  const html = buildEmailHtml(user.name, order);
+  const html = buildEmailHtml(user?.name || 'אורח', order);
+  const mailOptions = {
+    from: getFromAddress(),
+    to,
+    subject: `לונה פארק — אישור הזמנה ${order.ticketCode}`,
+    html,
+    attachments: [
+      {
+        filename: `ticket-${order.ticketCode}.png`,
+        content: barcodeBuffer,
+        cid: 'barcode',
+      },
+    ],
+  };
+
   const transporter = getTransporter();
 
-  if (!transporter) {
-    const localPath = await saveTicketLocally(user.email, order, barcodeBuffer, html);
-    return {
-      sent: false,
-      reason: 'smtp_not_configured',
-      localPath,
-      hint: 'הוסיפי SMTP_HOST, SMTP_USER ו-SMTP_PASS לקובץ .env לשליחת אימייל אמיתי',
-    };
+  if (transporter) {
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(`Order confirmation sent to ${to} (${order.ticketCode})`);
+      return { sent: true, recipient: to, devMode: false };
+    } catch (err) {
+      console.error(`Failed to send order email to ${to}:`, err.message);
+      const localPath = await saveTicketLocally(to, order, barcodeBuffer, html);
+      const isAuthError = /badcredentials|username and password/i.test(err.message);
+      const message = isAuthError
+        ? 'Gmail דחה את ההתחברות — ודאי ש-SMTP_USER הוא האימייל הנכון וש-SMTP_PASS היא סיסמת אפליקציה (16 תווים, בלי רווחים)'
+        : `שגיאת שליחת מייל: ${err.message}`;
+      return {
+        sent: false,
+        reason: 'smtp_error',
+        error: err.message,
+        localPath,
+        recipient: to,
+        message,
+      };
+    }
   }
 
-  try {
-    await transporter.sendMail({
-      from: emailFrom,
-      to: user.email,
-      subject: `לונה פארק — אישור הזמנה ${order.ticketCode}`,
-      html,
-      attachments: [
-        {
-          filename: `ticket-${order.ticketCode}.png`,
-          content: barcodeBuffer,
-          cid: 'barcode',
-        },
-      ],
-    });
-    console.log(`Order confirmation sent to ${user.email} (${order.ticketCode})`);
-    return { sent: true };
-  } catch (err) {
-    console.error(`Failed to send order email to ${user.email}:`, err.message);
-    const localPath = await saveTicketLocally(user.email, order, barcodeBuffer, html);
-    return { sent: false, reason: 'smtp_error', error: err.message, localPath };
+  if (nodeEnv === 'development' && (!smtpHost || !smtpUser || !smtpPass)) {
+    try {
+      const devTransport = await getDevTransporter();
+      const info = await devTransport.sendMail(mailOptions);
+      const previewUrl = nodemailer.getTestMessageUrl(info);
+      console.log(`Dev email preview for ${to}: ${previewUrl}`);
+      return {
+        sent: true,
+        recipient: to,
+        devMode: true,
+        previewUrl,
+        message: `מייל דמו נשלח! לחצי לצפייה (המייל לא מגיע לאימייל אמיתי בפיתוח)`,
+      };
+    } catch (err) {
+      console.error('Dev email failed:', err.message);
+    }
   }
+
+  const localPath = await saveTicketLocally(to, order, barcodeBuffer, html);
+  return {
+    sent: false,
+    reason: 'smtp_not_configured',
+    localPath,
+    recipient: to,
+    message: `הכרטיס נשמר בשרת: ${localPath}. להגדרת מייל אמיתי הוסיפי SMTP לקובץ server/.env`,
+  };
 }
 
 module.exports = { sendOrderConfirmationEmail, generateBarcodePng };

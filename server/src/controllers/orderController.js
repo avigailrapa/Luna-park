@@ -229,4 +229,63 @@ async function getOrderBarcode(req, res, next) {
   }
 }
 
-module.exports = { createOrder, getMyOrders, getAllOrders, validateTicket, getOrderBarcode };
+async function resendOrderEmail(req, res, next) {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, userId: req.user.id }).populate(
+      'rideId',
+      'name'
+    );
+    if (!order?.ticketCode) {
+      return res.status(404).json({ message: 'הזמנה לא נמצאה' });
+    }
+
+    const user = await User.findById(req.user.id);
+    let recipient = user?.email?.trim().toLowerCase() || '';
+
+    const customEmail = req.body?.email?.trim().toLowerCase();
+    if (customEmail) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customEmail)) {
+        return res.status(400).json({ message: 'כתובת אימייל לא תקינה' });
+      }
+      recipient = customEmail;
+    }
+
+    if (!recipient) {
+      return res.status(400).json({ message: 'יש להזין כתובת אימייל לשליחה' });
+    }
+
+    const emailResult = await sendOrderConfirmationEmail(user, order, recipient);
+
+    if (emailResult.sent) {
+      return res.json({
+        message: emailResult.message || `הכרטיס נשלח לאימייל ${recipient}`,
+        emailSent: true,
+        recipient,
+        devMode: emailResult.devMode || false,
+        previewUrl: emailResult.previewUrl || null,
+      });
+    }
+
+    return res.json({
+      message:
+        emailResult.message ||
+        emailResult.hint ||
+        `הכרטיס נשמר בשרת (logs/tickets) עבור ${recipient}`,
+      emailSent: false,
+      emailHint: emailResult.hint || null,
+      localPath: emailResult.localPath || null,
+      recipient,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = {
+  createOrder,
+  getMyOrders,
+  getAllOrders,
+  validateTicket,
+  getOrderBarcode,
+  resendOrderEmail,
+};

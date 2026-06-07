@@ -28,6 +28,29 @@ export class OrderService {
     });
   }
 
+  resendOrderEmail(
+    orderId: string,
+    email: string
+  ): Observable<{
+    message: string;
+    emailSent?: boolean;
+    emailHint?: string;
+    localPath?: string;
+    recipient?: string;
+    devMode?: boolean;
+    previewUrl?: string;
+  }> {
+    return this.http.post<{
+      message: string;
+      emailSent?: boolean;
+      emailHint?: string;
+      localPath?: string;
+      recipient?: string;
+      devMode?: boolean;
+      previewUrl?: string;
+    }>(`${environment.apiUrl}/orders/my-orders/${orderId}/resend-email`, { email });
+  }
+
   getMyOrders(): Observable<{ orders: Order[] }> {
     return this.http.get<{ orders: Order[] }>(`${environment.apiUrl}/orders/my-orders`);
   }

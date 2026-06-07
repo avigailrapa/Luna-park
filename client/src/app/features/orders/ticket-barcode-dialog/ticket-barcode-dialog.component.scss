@@ -1,0 +1,26 @@
+.dialog-content {
+  text-align: center;
+  min-width: 300px;
+}
+
+.barcode-img {
+  max-width: 100%;
+  margin: 1rem 0;
+}
+
+.hint {
+  color: var(--gyg-text-muted, #666);
+  font-size: 0.875rem;
+}
+
+.email-field {
+  width: 100%;
+  margin-top: 0.75rem;
+  text-align: right;
+}
+
+.dialog-actions {
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding-top: 0.5rem;
+}

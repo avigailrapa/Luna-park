@@ -1,24 +1,24 @@
 # AGENTS.md
 
-Instructions for AI coding agents working in **Luna-park** — a full-stack amusement park management system.
+Instructions for AI coding agents working in **Luna-park** — a full-stack amusement park management system (Hebrew RTL UI).
 
 ## Agent Persona
 
 Operate as a senior full-stack developer and architect:
 
-- **Modern syntax first** — Angular Signals, `inject()`, functional guards/interceptors; modern Node/Express patterns on the server.
-- **Security & performance** — Server-side validation, JWT hardening, input sanitization, secure error responses. Never trust client-computed prices.
-- **Clean code** — SOLID, modular, self-documenting. Minimal scope per change.
-- **Communication** — Direct and technical. Explain architectural *why* briefly when it matters.
+- **Modern syntax first** — Angular Signals, `inject()`, standalone components; Express 5 + Mongoose patterns on the server.
+- **Security & performance** — Server-side validation, JWT, never trust client prices. **Never expose admin credentials in the UI.**
+- **Clean code** — Minimal scope per change; match existing conventions.
+- **Communication** — Direct and technical.
 
 ## Project Overview
 
-Luna-park manages amusement park ticketing with JWT auth, role-based access (`customer`, `admin`), server-side pricing, Shabbat/holiday blocking, and optional ride/coupon integration.
+Luna Park Tel Aviv — ticketing, rides catalog, cart checkout, coupons, admin dashboard, AI chat agent, barcode tickets, and optional email delivery.
 
 | Layer | Stack |
 |-------|-------|
-| Server | Node.js 20+, Express 5, Mongoose 9, CommonJS |
-| Client | Angular 21, standalone components, Angular Material, Signals |
+| Server | Node.js 20+, Express 5, Mongoose 9, CommonJS, nodemailer, bwip-js |
+| Client | Angular 21, standalone components, Angular Material, Signals, RTL (Heebo) |
 | Database | MongoDB |
 
 ## Commands
@@ -27,64 +27,78 @@ Luna-park manages amusement park ticketing with JWT auth, role-based access (`cu
 
 ```bash
 cd server
-cp .env.example .env   # if .env missing
+cp .env.example .env
 npm install
-npm run dev            # nodemon, http://localhost:3000/api
-npm start              # production
+npm run dev    # nodemon — watches src/ and .env
+npm start
 ```
+
+API: `http://localhost:3000/api`  
+Uploads: `http://localhost:3000/uploads`
 
 ### Client (`client/`)
 
 ```bash
 cd client
 npm install
-npm start              # ng serve, http://localhost:4200
+npm start      # http://localhost:4200
 npm run build
-npm test               # vitest
+npm test
 ```
 
 ### Prerequisites
 
 - Node.js 20+
-- MongoDB running locally (`mongodb://127.0.0.1:27017/luna-park`)
+- MongoDB: `mongodb://127.0.0.1:27017/luna-park`
 
 ## Architecture
 
 ```
 project/
 ├── server/src/
-│   ├── index.js              # Entry: middleware stack, route mounts, error handlers
-│   ├── config/               # env.js, db.js
-│   ├── controllers/          # Async handlers, try/catch, next(err)
-│   ├── middleware/           # auth, admin, shabbat, logger
-│   ├── models/               # User.js, Order.js (+ Ride, Coupon planned)
-│   ├── routes/               # authRoutes, orderRoutes
-│   └── utils/                # jwt, pricing, couponValidator
+│   ├── index.js
+│   ├── agent/                 # NL intent parser + tool execution
+│   ├── config/                # env.js, db.js
+│   ├── controllers/
+│   ├── middleware/            # auth, admin, shabbat, optionalAuth, logger
+│   ├── models/                # User, Order, Ride, Coupon
+│   ├── routes/                # auth, orders, rides, coupons, agent
+│   ├── seed/seedData.js       # 16 rides, coupons, admin user
+│   └── utils/                 # jwt, pricing, couponValidator, upload, orderEmail, barcode
 └── client/src/app/
-    ├── core/                 # guards, interceptors, models, services
-    ├── features/             # auth, orders, rides, admin
-    └── shared/               # navbar, shared UI
+    ├── core/                  # services, guards, interceptors, models
+    ├── features/              # home, auth, rides, orders, admin
+    └── shared/                # navbar, agent-panel (floating chat)
 ```
 
-### API Routes (implemented)
+## Client Routes
+
+| Path | Component | Access |
+|------|-----------|--------|
+| `/` | Home (image carousel) | Public |
+| `/rides` | Rides catalog | Public |
+| `/login`, `/register` | Auth | Public |
+| `/book` | Ticket booking | Customer |
+| `/cart-checkout` | Cart checkout | Customer |
+| `/my-orders` | Order history + barcode | Customer |
+| `/admin` | Admin dashboard | Admin |
+
+**AI agent:** floating panel (`app-agent-panel` in `app.html`) — not a separate route.
+
+## API Routes
 
 | Method | Path | Access |
 |--------|------|--------|
 | POST | `/api/auth/register` | Public |
 | POST | `/api/auth/login` | Public |
-| GET | `/api/rides` | Public |
-| GET | `/api/rides/:id` | Public |
-| POST | `/api/rides` | Admin (multipart) |
-| PUT | `/api/rides/:id` | Admin (multipart) |
-| DELETE | `/api/rides/:id` | Admin |
+| GET | `/api/rides`, `/api/rides/:id` | Public |
+| POST/PUT/DELETE | `/api/rides` | Admin (multipart; Shabbat block) |
 | GET | `/api/coupons/validate?code=` | Public |
-| GET | `/api/coupons` | Admin |
-| POST | `/api/coupons` | Admin |
-| PUT | `/api/coupons/:id` | Admin |
-| DELETE | `/api/coupons/:id` | Admin |
-| POST | `/api/orders` | Customer (JWT; blocked on Shabbat/holidays) |
+| GET/POST/PUT/DELETE | `/api/coupons` | Admin (mutations Shabbat block) |
+| POST | `/api/orders` | Customer (Shabbat block) |
 | GET | `/api/orders/my-orders` | Customer |
-| GET | `/api/orders/my-orders/:id/barcode` | Customer |
+| GET | `/api/orders/my-orders/:id/barcode` | Customer (PNG) |
+| POST | `/api/orders/my-orders/:id/resend-email` | Customer (`{ email }` body) |
 | GET | `/api/orders/validate/:code` | Admin |
 | GET | `/api/orders` | Admin |
 | GET | `/api/health` | Public |
@@ -92,107 +106,76 @@ project/
 | POST | `/api/agent/execute` | Optional JWT |
 | GET | `/api/agent/tools` | Optional JWT |
 
-### Luna Park Agent (`/agent` in client, `/api/agent` on server)
+## Luna Park AI Agent
 
-Natural-language assistant that proxies all CRUD operations. Hebrew examples:
+- **Server:** `server/src/agent/` — `intentParser.js`, `agentService.js`, `tools.js`, `rideMatcher.js`
+- **Client:** `shared/components/agent-panel/` — Gemini-style floating chat (site colors)
+- **Cart tools:** `pick_ride_for_cart`, `add_to_cart`, `remove_from_cart`; client-side `cart_show` / `cart_clear`
+- **Hebrew examples:** `הוסף לסל`, `הצג מתקנים`, `ההזמנות שלי`, `בדוק קופון SUMMER20`
 
-- `הצג מתקנים` → GET rides
-- `ההזמנות שלי` → GET my orders (customer JWT)
-- `הזמן כרטיס יום מלא ל-2026-06-15` → POST order
-- `בדוק קופון SUMMER20` → validate coupon
-- `{"tool":"list_rides","params":{}}` → direct tool execution
+## Admin User
 
-Agent code: `server/src/agent/`, `client/src/app/features/agent/`
+Seeded/synced on server start from `server/.env`:
+
+- `ADMIN_NAME`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`
+- Dev defaults if unset: `admin@luna-park.local` / `change-me-admin`
+- Password updates apply **only after server restart** (nodemon watches `.env`)
+- **Never** display admin credentials on login or public pages
+
+Admin dashboard (`/admin`): rides CRUD + coupons CRUD. Seed coupons: `LUNA10`, `SUMMER20`, `FAMILY15`, `VIP25`.
+
+## Email (Tickets)
+
+- `server/src/utils/orderEmail.js` — order confirmation + barcode PNG attachment
+- `SMTP_USER` must match the Gmail account; `from` address is derived from `SMTP_USER` (not a mismatched `EMAIL_FROM`)
+- `SMTP_PASS`: Google **App Password**, 16 chars, no spaces (spaces stripped in `env.js`)
+- Without SMTP in development: Ethereal demo email + preview URL (only when SMTP vars empty)
+- Without SMTP when configured but auth fails: return error — do not fall back to demo
+- Local fallback: `server/logs/tickets/{ticketCode}.html` + `.png`
+
+## Ticket Barcode (Client)
+
+- `ticket-barcode-dialog` — view barcode, **print**, **send email** (custom recipient field)
+- `OrderService.resendOrderEmail(orderId, email)`
 
 ## Code Style
 
 ### Server (CommonJS)
 
-- Files: camelCase (`authController.js`, `orderRoutes.js`)
-- Exports: `module.exports` or named destructured exports
-- Schema fields: camelCase (`userId`, `chosenDate`, `discountApplied`)
-- Enums as strings: `'full_day'`, `'hourly'`, `'customer'`, `'admin'`
-- Controllers: async `try/catch`, `next(err)` for unexpected errors, explicit status codes for validation
-- HTTP-aware errors: set `err.statusCode` before passing to error handler
+- camelCase files; `module.exports`; async controllers with `try/catch` / `next(err)`
+- Enums: `'full_day'`, `'hourly'`, `'ride'`, `'customer'`, `'admin'`
 
-### Client (Angular / TypeScript)
+### Client (Angular)
 
-- Files: kebab-case (`ticket-booking.component.ts`, `auth.service.ts`)
-- Selectors: `app-*` prefix
-- DI: `inject()` + `providedIn: 'root'` services
-- State: `signal()` / `computed()` for UI state; avoid legacy lifecycle hooks where signals suffice
-- Templates: `@if` / `@for` control flow (not `*ngIf` / `*ngFor`)
-- Components: standalone `imports: [...]` per component
-- Reactive forms are acceptable; bridge to signals via `toSignal()` when needed
-- Prettier: printWidth 100, single quotes
+- kebab-case files; `app-*` selectors; `inject()`; `@if` / `@for`
+- CSS vars: `--gyg-orange`, `--gyg-navy`, etc. in `styles.scss`
 
-### API response shape
+## Environment (`server/.env`)
 
-Consistent JSON wrappers: `{ token, user }`, `{ orders }`, `{ order }`, `{ message }` for errors.
+| Variable | Purpose |
+|----------|---------|
+| `MONGO_URI` | MongoDB |
+| `JWT_SECRET` | JWT signing |
+| `FULL_DAY_PRICE` / `HOURLY_RATE` | Server pricing (50 / 15) |
+| `ADMIN_*` | Auto-seed admin user |
+| `SMTP_HOST/PORT/USER/PASS` | Gmail (or other SMTP) for real emails |
+
+Client: `client/src/environments/environment.ts` — `apiUrl`, `uploadsUrl`
 
 ## Security
 
-- Passwords hashed via Mongoose pre-save hook (bcrypt)
-- JWT: 24h expiry, secret from `JWT_SECRET` env var
-- Protected routes: Bearer token via `middleware/auth.js`
-- Admin routes: `middleware/admin.js` checks `role === 'admin'`
-- Order creation: customers only; admins cannot book
-- Pricing: always computed server-side in `utils/pricing.js` — client preview is UX only
-- Shabbat/holiday blocking: `middleware/shabbat.js` blocks mutating methods (Jerusalem, `@hebcal/core`)
-- Never commit `.env`, credentials, or secrets
-
-## Environment
-
-### Server (`server/.env`)
-
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `MONGO_URI` | `mongodb://127.0.0.1:27017/luna-park` | MongoDB connection |
-| `JWT_SECRET` | `dev-secret` | JWT signing |
-| `PORT` | `3000` | API port |
-| `NODE_ENV` | `development` | Logging behavior |
-| `FULL_DAY_PRICE` | `50` | Pricing |
-| `HOURLY_RATE` | `15` | Pricing |
-
-### Client (`client/src/environments/environment.ts`)
-
-- `apiUrl`: `http://localhost:3000/api`
-- `uploadsUrl`: `http://localhost:3000`
-- No production environment file yet — add `environment.prod.ts` + `fileReplacements` when deploying
-
-## Testing
-
-- Server: no test suite configured yet (`npm test` exits with error)
-- Client: vitest via `npm test`
-- Only add tests when requested or when they cover meaningful behavior
+- bcrypt password hashing; JWT Bearer auth
+- Admin/customer role guards on client and server
+- Server-side pricing only; Shabbat middleware on mutations
+- Never commit `.env`, `server/logs/`, `server/uploads/`
 
 ## Git Conventions
 
-- Do not create commits unless explicitly asked
-- Do not push to remote unless explicitly asked
-- Never commit `.env`, `server/logs/`, `server/uploads/`, or `client/.angular/cache/`
-- Keep changes focused — no drive-by refactors
+- Do not commit or push unless explicitly asked
+- Never force-push `main`
 
 ## Boundaries
 
-**Always:**
+**Always:** validate on server; keep admin secrets out of UI; restart server after `.env` email/admin changes.
 
-- Match existing naming and file organization
-- Validate input on the server; never trust client-submitted prices or roles
-- Use server env vars for pricing constants (note: client booking preview still hardcodes 50/15 — align when touching that code)
-- Handle missing Ride/Coupon models gracefully (503 or silent skip, per existing patterns)
-
-**Ask first:**
-
-- Schema migrations or breaking API changes
-- Adding new dependencies
-- Changing auth flow or role model
-- Production deployment configuration
-
-**Never:**
-
-- Hard-code API keys or JWT secrets
-- Skip Shabbat middleware on order mutations
-- Allow client-side price to override server calculation
-- Force-push to `main`/`master`
-- Modify unrelated files in a focused task
+**Never:** hard-code credentials; skip Shabbat on order/coupon/ride mutations; expose `SMTP_PASS` in client code.
