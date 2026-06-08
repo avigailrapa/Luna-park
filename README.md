@@ -1,16 +1,16 @@
-# Luna-park — לונה פארק
+# Luna-park
 
-מערכת Full-Stack לניהול פארק שעשועים והזמנת כרטיסים דיגיטלית ל**לונה פארק תל אביב**.  
-ממשק בעברית (RTL), עיצוב מודרני בהשראת פלטפורמות הזמנה, עם Angular 21 בצד הלקוח ו-Node.js + MongoDB בשרת.
+A full-stack amusement park management and digital ticketing system.  
+Hebrew UI (RTL), modern booking-platform-inspired design, Angular 21 on the client, and Node.js + MongoDB on the server.
 
-**Luna-park** is a full-stack amusement park ticketing and management system — Hebrew UI, image-rich catalog, cart checkout, barcode confirmations, and admin tools.
+**Luna-park** is a full-stack amusement park ticketing and management system — Hebrew UI, image-rich catalog, cart checkout, barcode confirmations, AI assistant, and admin tools.
 
-## תיאור הפרויקט
+## Project overview
 
-האפליקציה מאפשרת למבקרים לגלוש בדף בית עם קרוסלת תמונות אמיתיות מהפארק, לעיין בקטלוג **16 מתקנים**, להוסיף אטרקציות לסל ולשלם, או להזמין כרטיס כניסה (יום שלם / לפי שעות) עם קופונים. לאחר ההזמנה מתקבל אישור עם **ברקוד דיגיטלי** (אימייל או הצגה בהזמנות שלי). מנהלים יכולים לנהל מתקנים, קופונים והזמנות מלוח ניהול ייעודי.
+Visitors can browse a home page with a carousel of real park photos, explore a catalog of **16 rides**, add attractions to a cart and pay, or book an entry ticket (full day / hourly) with coupon codes. After checkout, they receive confirmation with a **digital barcode** (email or “My Orders”). A floating **AI agent** helps find rides and build a cart. Admins manage rides, coupons, and orders from a dedicated dashboard.
 
-| שכבה | טכנולוגיה |
-|------|-----------|
+| Layer | Stack |
+|-------|-------|
 | Client | Angular 21, Angular Material, Signals, standalone components |
 | Server | Node.js 20+, Express 5, Mongoose 9 |
 | Database | MongoDB |
@@ -18,12 +18,19 @@
 
 ## Features
 
-### דף בית וחוויית משתמש
+### Home & user experience
 
-- דף בית (`/`) עם קרוסלת תמונות וטעימה מ-3 מתקנים מובילים
-- קטלוג מתקנים (`/rides`) — כרטיסים עם תמונות, מחירים וסטטוס
-- עיצוב GetYourGuide-style — ניווט, כרטיסים וצבעי מותג
-- תמונות אמיתיות של לונה פארק תל אביב (Wikimedia Commons), נשמרות מקומית ב-`/uploads`
+- Home page (`/`) with image carousel and a preview of 3 featured rides
+- Rides catalog (`/rides`) — cards with images, prices, and status
+- GetYourGuide-style layout — navigation, cards, and brand colors
+- Real park images (Wikimedia Commons), stored locally under `/uploads`
+
+### AI agent
+
+- Floating chat panel on every page
+- Natural-language ride search and recommendations
+- Add rides to cart via the agent
+- Server-side tools: ride lookup, cart actions, order helpers
 
 ### Authentication & accounts
 
@@ -38,13 +45,13 @@
 - Cart: add rides from catalog → checkout (demo payment flow)
 - Coupon codes with server-side validation and discounts
 - Server-side price calculation — never trust client totals
-- Order history; barcode dialog per order
+- Order history; barcode dialog with print and email options
 - Email confirmation with embedded barcode (SMTP / local fallback)
 - Shabbat and holiday blocking on order creation
 
 ### Rides & coupons
 
-- 16 rides seeded with Luna Park Tel Aviv images
+- 16 rides seeded with park images
 - Rides catalog with image cards and add-to-cart
 - Admin dashboard: rides CRUD (FormData upload) + coupons CRUD
 - Multer media uploads (`/uploads/images`, `/uploads/audio`)
@@ -52,9 +59,10 @@
 ### Server (`server/`)
 
 - **Models:** `User.js`, `Order.js`, `Ride.js`, `Coupon.js`
-- **Routes:** `/api/auth`, `/api/orders`, `/api/rides`, `/api/coupons`
+- **Routes:** `/api/auth`, `/api/orders`, `/api/rides`, `/api/coupons`, `/api/agent`
 - **Utils:** `pricing.js`, `couponValidator.js`, `upload.js`, `barcode.js`, `orderEmail.js`
-- **Middleware:** auth, admin, shabbat, logger
+- **Agent:** `agentService.js`, `intentParser.js`, `rideMatcher.js`, `tools.js`
+- **Middleware:** auth, admin, shabbat, logger, optionalAuth
 - **Seed:** rides, coupons, admin user, image backfill from Wikimedia
 
 ### Client (`client/`)
@@ -63,6 +71,7 @@
 - Ticket booking with hourly time range and coupons
 - Order history with barcode view
 - Admin dashboard for rides and coupons
+- AI agent panel and chat components
 - AuthService with Signals, route guards, JWT interceptor, CartService
 
 ## Quick start
@@ -139,6 +148,9 @@ Share the GitHub Pages URL with anyone — they can browse the site without inst
 | POST/PUT/DELETE | `/api/rides` | Admin (FormData; blocked on Shabbat/holidays) |
 | GET | `/api/coupons/validate` | Public |
 | GET/POST/PUT/DELETE | `/api/coupons` | Admin (mutations blocked on Shabbat/holidays) |
+| GET | `/api/agent/tools` | Public (optional JWT) |
+| POST | `/api/agent/chat` | Public (optional JWT) |
+| POST | `/api/agent/execute` | Public (optional JWT) |
 
 ## Team ownership
 
@@ -147,4 +159,4 @@ Share the GitHub Pages URL with anyone — they can browse the site without inst
 | Models | User, Order | Ride, Coupon |
 | Routes | `/api/auth`, `/api/orders` | `/api/rides`, `/api/coupons` |
 | Client | Login, Booking, Orders, Cart | Home, Rides catalog, Admin dashboard |
-| Shared | Logger, Shabbat middleware, barcode/email | `upload.js`, static `/uploads`, seed |
+| Shared | Logger, Shabbat middleware, barcode/email, AI agent | `upload.js`, static `/uploads`, seed |

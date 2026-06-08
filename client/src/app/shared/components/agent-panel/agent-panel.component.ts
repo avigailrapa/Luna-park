@@ -59,6 +59,13 @@ export class AgentPanelComponent {
     const text = (message ?? this.input).trim();
     if (!text || this.loading()) return;
 
+    if (this.isAddToCartIntent(text) && !this.auth.isAuthenticated()) {
+      this.messages.update((list) => [...list, { role: 'user', text }]);
+      this.input = '';
+      this.pushAgent('צריך להתחבר לחשבון כדי להוסיף מתקנים לסל.', false);
+      return;
+    }
+
     if (this.tryPickFromList(text)) return;
 
     if (this.isGenericAddRequest(text)) {
@@ -92,6 +99,11 @@ export class AgentPanelComponent {
   }
 
   private showRidePicker(): void {
+    if (!this.auth.isAuthenticated()) {
+      this.pushAgent('צריך להתחבר לחשבון כדי להוסיף מתקנים לסל.', false);
+      return;
+    }
+
     this.loading.set(true);
     this.agentUi.open();
 
@@ -155,6 +167,11 @@ export class AgentPanelComponent {
   }
 
   private addRideToCart(ride: RidePickItem): void {
+    if (!this.auth.isAuthenticated()) {
+      this.pushAgent('צריך להתחבר לחשבון כדי להוסיף מתקנים לסל.', false);
+      return;
+    }
+
     if (this.cart.hasRide(ride._id)) {
       this.pushAgent(`"${ride.name}" כבר נמצא בסל`, true);
       return;
@@ -184,6 +201,9 @@ export class AgentPanelComponent {
 
     switch (action.type) {
       case 'cart_add':
+        if (!this.auth.isAuthenticated()) {
+          return 'צריך להתחבר לחשבון כדי להוסיף מתקנים לסל.';
+        }
         if (action.ride) {
           this.cart.addRide(action.ride as Ride);
         }
@@ -217,5 +237,15 @@ export class AgentPanelComponent {
       const el = this.messagesEl()?.nativeElement;
       if (el) el.scrollTop = el.scrollHeight;
     }, 50);
+  }
+
+  private isAddToCartIntent(text: string): boolean {
+    const normalized = text.trim().toLowerCase();
+    return (
+      /(הוסף|תוסיף|הוסיפי|add).*(סל|עגלה|cart)/i.test(text) ||
+      /(לסל|לעגלה)\s*$/i.test(text.trim()) ||
+      normalized === 'הוסף לסל' ||
+      normalized === 'תוסיף לסל'
+    );
   }
 }

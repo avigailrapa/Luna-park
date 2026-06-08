@@ -35,7 +35,7 @@ const TOOL_CATALOG = [
     id: 'add_to_cart',
     method: 'CLIENT',
     path: 'cart',
-    roles: ['guest', 'customer', 'admin'],
+    roles: ['customer', 'admin'],
     description: 'הוספת מתקן לסל לפי שם (לדוגמה: הוסף אדרנלין לסל)',
     params: [{ name: 'rideName', required: true }],
   },
