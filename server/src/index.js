@@ -44,6 +44,15 @@ app.use('/api/rides', rideRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/agent', agentRoutes);
 
+app.get('/', (_req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'luna-park-api',
+    message: 'API is running. Use /api/* endpoints.',
+    health: '/api/health',
+  });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', service: 'luna-park-api' });
 });
