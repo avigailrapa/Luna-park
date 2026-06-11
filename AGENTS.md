@@ -17,9 +17,9 @@ Luna Park Tel Aviv — ticketing, rides catalog, cart checkout, coupons, admin d
 
 | Layer | Stack |
 |-------|-------|
-| Server | Node.js 20+, Express 5, Mongoose 9, CommonJS, nodemailer, bwip-js |
+| Server | Node.js 20+, **TypeScript**, Express 5, Mongoose 9, nodemailer, bwip-js, **Vitest** |
 | Client | Angular 21, standalone components, Angular Material, Signals, RTL (Heebo) |
-| Database | MongoDB |
+| Database | MongoDB (local or **MongoDB Atlas** shared team cluster) |
 
 ## Commands
 
@@ -29,8 +29,10 @@ Luna Park Tel Aviv — ticketing, rides catalog, cart checkout, coupons, admin d
 cd server
 cp .env.example .env
 npm install
-npm run dev    # nodemon — watches src/ and .env
-npm start
+npm run dev    # nodemon + tsx — watches src/ and .env
+npm run build  # compile to dist/
+npm start      # node dist/index.js
+npm test       # vitest unit tests
 ```
 
 API: `http://localhost:3000/api`  
@@ -49,26 +51,30 @@ npm test
 ### Prerequisites
 
 - Node.js 20+
-- MongoDB: `mongodb://127.0.0.1:27017/luna-park`
+- MongoDB — local (`mongodb://127.0.0.1:27017/luna-park`) **or** shared **MongoDB Atlas** URI in `MONGO_URI`
+- Atlas: add your IP under **Network Access** (or `0.0.0.0/0` for dev)
 
 ## Architecture
 
 ```
 project/
 ├── server/src/
-│   ├── index.js
+│   ├── index.ts
+│   ├── types/                 # shared TS types + express.d.ts
 │   ├── agent/                 # NL intent parser + tool execution
-│   ├── config/                # env.js, db.js
+│   ├── config/                # env.ts, db.ts
 │   ├── controllers/
 │   ├── middleware/            # auth, admin, shabbat, optionalAuth, logger
 │   ├── models/                # User, Order, Ride, Coupon
 │   ├── routes/                # auth, orders, rides, coupons, agent
-│   ├── seed/seedData.js       # 16 rides, coupons, admin user
+│   ├── seed/seedData.ts       # 16 rides, coupons, admin user
 │   └── utils/                 # jwt, pricing, couponValidator, upload, orderEmail, barcode
+│       └── *.test.ts          # unit tests (vitest)
 └── client/src/app/
     ├── core/                  # services, guards, interceptors, models
     ├── features/              # home, auth, rides, orders, admin
     └── shared/                # navbar, agent-panel (floating chat)
+        └── *.spec.ts          # unit tests (vitest via ng test)
 ```
 
 ## Client Routes
@@ -108,9 +114,10 @@ project/
 
 ## Luna Park AI Agent
 
-- **Server:** `server/src/agent/` — `intentParser.js`, `agentService.js`, `tools.js`, `rideMatcher.js`
+- **Server:** `server/src/agent/` — `intentParser.ts`, `agentService.ts`, `tools.ts`, `rideMatcher.ts`
 - **Client:** `shared/components/agent-panel/` — Gemini-style floating chat (site colors)
 - **Cart tools:** `pick_ride_for_cart`, `add_to_cart`, `remove_from_cart`; client-side `cart_show` / `cart_clear`
+- **Auth required** for cart mutations via agent (server + client enforce login)
 - **Hebrew examples:** `הוסף לסל`, `הצג מתקנים`, `ההזמנות שלי`, `בדוק קופון SUMMER20`
 
 ## Admin User
@@ -126,9 +133,9 @@ Admin dashboard (`/admin`): rides CRUD + coupons CRUD. Seed coupons: `LUNA10`, `
 
 ## Email (Tickets)
 
-- `server/src/utils/orderEmail.js` — order confirmation + barcode PNG attachment
+- `server/src/utils/orderEmail.ts` — order confirmation + barcode PNG attachment
 - `SMTP_USER` must match the Gmail account; `from` address is derived from `SMTP_USER` (not a mismatched `EMAIL_FROM`)
-- `SMTP_PASS`: Google **App Password**, 16 chars, no spaces (spaces stripped in `env.js`)
+- `SMTP_PASS`: Google **App Password**, 16 chars, no spaces (spaces stripped in `env.ts`)
 - Without SMTP in development: Ethereal demo email + preview URL (only when SMTP vars empty)
 - Without SMTP when configured but auth fails: return error — do not fall back to demo
 - Local fallback: `server/logs/tickets/{ticketCode}.html` + `.png`
@@ -140,10 +147,12 @@ Admin dashboard (`/admin`): rides CRUD + coupons CRUD. Seed coupons: `LUNA10`, `
 
 ## Code Style
 
-### Server (CommonJS)
+### Server (TypeScript)
 
-- camelCase files; `module.exports`; async controllers with `try/catch` / `next(err)`
+- camelCase files; `import`/`export`; compile with `tsc` to `dist/`
+- async controllers with `try/catch` / `next(err)`
 - Enums: `'full_day'`, `'hourly'`, `'ride'`, `'customer'`, `'admin'`
+- Unit tests: `*.test.ts` next to source — run with `npm test`
 
 ### Client (Angular)
 
@@ -154,7 +163,8 @@ Admin dashboard (`/admin`): rides CRUD + coupons CRUD. Seed coupons: `LUNA10`, `
 
 | Variable | Purpose |
 |----------|---------|
-| `MONGO_URI` | MongoDB |
+| `MONGO_URI` | MongoDB (local or Atlas `mongodb+srv://...`) |
+| `CLIENT_ORIGINS` | Comma-separated CORS origins (include GitHub Pages if deployed) |
 | `JWT_SECRET` | JWT signing |
 | `FULL_DAY_PRICE` / `HOURLY_RATE` | Server pricing (50 / 15) |
 | `ADMIN_*` | Auto-seed admin user |

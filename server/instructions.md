@@ -1,6 +1,6 @@
 # Luna Park — Server Instructions
 
-Express 5 API for Luna Park ticketing, rides, coupons, admin, AI agent, and ticket email.
+Express 5 **TypeScript** API for Luna Park ticketing, rides, coupons, admin, AI agent, and ticket email.
 
 ## Quick Start
 
@@ -12,10 +12,18 @@ npm run dev
 ```
 
 - API: `http://localhost:3000/api`
+- Root: `GET /` — API status
 - Health: `GET /api/health`
 - Uploads: `http://localhost:3000/uploads`
 
-**Requires:** Node.js 20+, MongoDB running locally.
+**Requires:** Node.js 20+, MongoDB (local or **MongoDB Atlas**)
+
+### MongoDB Atlas (team shared DB)
+
+1. Get `MONGO_URI` from your partner (format: `mongodb+srv://...`)
+2. Set in `server/.env`
+3. In Atlas → **Network Access** → add your IP (or `0.0.0.0/0` for development)
+4. Restart server — `seedDatabase()` syncs rides, coupons, and admin on startup
 
 ## Environment (`.env`)
 
@@ -23,7 +31,8 @@ Copy from `.env.example` and configure:
 
 | Variable | Description |
 |----------|-------------|
-| `MONGO_URI` | MongoDB connection string |
+| `MONGO_URI` | MongoDB connection string (local or Atlas) |
+| `CLIENT_ORIGINS` | Allowed frontend origins (comma-separated) |
 | `JWT_SECRET` | Secret for JWT tokens |
 | `PORT` | Default `3000` |
 | `FULL_DAY_PRICE` | Full-day ticket price (default `50`) |
@@ -69,20 +78,20 @@ Default in development (if unset): `admin@luna-park.local` / `change-me-admin`
 
 ```
 src/
-├── index.js              # App entry, routes, seed on start
+├── index.ts              # App entry, routes, seed on start
+├── types/                # Shared TS types
 ├── agent/                # AI chat: intentParser, tools, agentService
-├── config/env.js         # Env vars (strips spaces from SMTP_PASS)
+├── config/env.ts         # Env vars (strips spaces from SMTP_PASS)
 ├── controllers/
 ├── middleware/           # auth, admin, shabbat, optionalAuth, logger
 ├── models/               # User, Order, Ride, Coupon
 ├── routes/
-├── seed/seedData.js      # 16 rides, 4 coupons, admin
+├── seed/seedData.ts      # 16 rides, 4 coupons, admin
 └── utils/
-    ├── pricing.js
-    ├── couponValidator.js
-    ├── upload.js         # Multer
-    ├── barcode.js        # PNG barcode generation
-    └── orderEmail.js     # Nodemailer + local ticket files
+    ├── pricing.ts        # + pricing.test.ts
+    ├── jwt.ts            # + jwt.test.ts
+    ├── intentParser.test.ts (in agent/)
+    └── ...
 ```
 
 ## API Summary
@@ -131,8 +140,10 @@ First run creates:
 ## Scripts
 
 ```bash
-npm run dev    # nodemon
-npm start      # production
+npm run dev    # nodemon + tsx (TypeScript, hot reload)
+npm run build  # tsc → dist/
+npm start      # node dist/index.js (production)
+npm test       # vitest — pricing, jwt, intentParser, rideMatcher, ticketCode
 ```
 
 ## Do Not Commit

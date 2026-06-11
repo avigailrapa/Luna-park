@@ -13,7 +13,7 @@ npm start
 App: `http://localhost:4200`  
 API: `http://localhost:3000/api` (see `src/environments/environment.ts`)
 
-**Requires:** Server running on port 3000, MongoDB up.
+**Requires:** Server running on port 3000, MongoDB (local or Atlas via `MONGO_URI`).
 
 ## Pages & Routes
 
@@ -34,6 +34,7 @@ API: `http://localhost:3000/api` (see `src/environments/environment.ts`)
 - Site-colored Gemini-style panel
 - Hebrew commands: `הוסף לסל`, `הצג מתקנים`, `מה בסל`, `עזרה`
 - **Add to cart:** shows ride picker (name + price); click or type number/name
+- **Login required** for add/remove cart actions through the agent
 - Uses `AgentService` → `POST /api/agent/chat`
 
 ## Customer Flow
@@ -104,8 +105,18 @@ Ride API images: `http://localhost:3000/uploads/images/`
 ```bash
 npm start       # ng serve :4200
 npm run build   # production build
-npm test        # vitest
+npm run build:pages  # GitHub Pages build
+npm test        # vitest — app, auth, cart, navbar specs
 ```
+
+## Unit Tests
+
+| File | Covers |
+|------|--------|
+| `app.spec.ts` | App bootstrap |
+| `auth.service.spec.ts` | Login state, logout |
+| `cart.service.spec.ts` | Add/remove/clear cart |
+| `navbar.component.spec.ts` | Navbar component |
 
 ## Email Notes (Barcode)
 
