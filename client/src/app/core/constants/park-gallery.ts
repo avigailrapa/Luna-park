@@ -42,6 +42,10 @@ function getBaseHref(): string {
   return href.endsWith('/') ? href : `${href}/`;
 }
 
+export function getPublicVideoUrl(filename: string): string {
+  return `${getBaseHref()}videos/${filename}`;
+}
+
 function getPublicImageUrl(filename: string): string {
   return `${getBaseHref()}images/${filename}`;
 }

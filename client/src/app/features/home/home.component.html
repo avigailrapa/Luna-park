@@ -1,21 +1,16 @@
 <div class="home">
   <section class="hero" aria-label="לונה פארק — ברוכים הבאים">
-    <div class="hero-slides">
-      @for (slide of slides; track trackSlide($index, slide); let i = $index) {
-        <div
-          class="hero-slide"
-          [class.active]="activeSlide() === i"
-          [style.background-image]="'url(' + slide.image + ')'"
-          role="img"
-          [attr.aria-label]="slide.title"
-        >
-          <div class="hero-caption">
-            <span class="caption-title">{{ slide.title }}</span>
-            <span class="caption-sub">{{ slide.subtitle }}</span>
-          </div>
-        </div>
-      }
-    </div>
+    <video
+      #heroVideo
+      class="hero-video"
+      [src]="heroVideoUrl"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="auto"
+      aria-label="סרטון לונה פארק"
+    ></video>
 
     <div class="hero-overlay">
       <div class="hero-content">
@@ -47,19 +42,6 @@
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="hero-dots" role="tablist" aria-label="בחירת תמונה">
-      @for (slide of slides; track trackSlide($index, slide); let i = $index) {
-        <button
-          type="button"
-          class="dot"
-          [class.active]="activeSlide() === i"
-          [attr.aria-selected]="activeSlide() === i"
-          [attr.aria-label]="'תמונה ' + (i + 1)"
-          (click)="goToSlide(i)"
-        ></button>
-      }
     </div>
   </section>
 

@@ -35,10 +35,18 @@ interface CouponSeed {
 
 type CouponInsertData = Omit<CouponSeed, 'imageSource' | 'imageFile'> & { imageUrl: string };
 
-/** Bump when ride image sources change — triggers re-download on next server start. */
-const IMAGE_SEED_VERSION = 6;
+/** Bump when ride image sources change — triggers re-copy on next server start. */
+const IMAGE_SEED_VERSION = 8;
 
-/** Ride photos sourced from Unsplash. */
+/** Local ride photos in project `pics/` folder (filename = ride name). */
+const PICS_DIR = path.join(__dirname, '../../../pics');
+
+const RIDE_PIC_ALIASES: Record<string, string> = {
+  'בית האימה לילי': 'בית האימה הלילי',
+  'כוסות התה המטורפות': 'כוסות התה המטורפת',
+};
+
+/** Ride photos from local `pics/` folder. */
 const rideSeeds: RideSeed[] = [
   {
     name: 'גלגל הענק לונה',
@@ -48,9 +56,8 @@ const rideSeeds: RideSeed[] = [
     category: 'family',
     price: 30,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1520463246322-5f6c5a6fbc62?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'ferris-wheel.jpg',
+    imageSource: '',
+    imageFile: 'ferris-wheel.png',
   },
   {
     name: 'רכבת ההרים אדרנלין',
@@ -60,9 +67,8 @@ const rideSeeds: RideSeed[] = [
     category: 'thrill',
     price: 45,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1530866495561-507c9faab2ed?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'roller-coaster.jpg',
+    imageSource: '',
+    imageFile: 'roller-coaster.png',
   },
   {
     name: 'קרוסלת הכוכבים',
@@ -72,9 +78,8 @@ const rideSeeds: RideSeed[] = [
     category: 'kids',
     price: 20,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1532960405005-a1e4df4f6f7b?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'carousel.jpg',
+    imageSource: '',
+    imageFile: 'carousel.png',
   },
   {
     name: 'מגלשת המים הכחולה',
@@ -84,9 +89,8 @@ const rideSeeds: RideSeed[] = [
     category: 'water',
     price: 35,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1527092719929-bf2a7b8a50a1?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'water-slide.jpg',
+    imageSource: '',
+    imageFile: 'water-slide.png',
   },
   {
     name: 'בית האימה לילי',
@@ -96,9 +100,8 @@ const rideSeeds: RideSeed[] = [
     category: 'thrill',
     price: 40,
     status: 'maintenance',
-    imageSource:
-      'https://images.unsplash.com/photo-1474487548417-781cb71495f3?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'haunted-house.jpg',
+    imageSource: '',
+    imageFile: 'haunted-house.png',
   },
   {
     name: 'מופע האור והמוזיקה',
@@ -108,9 +111,8 @@ const rideSeeds: RideSeed[] = [
     category: 'show',
     price: 15,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1505236858219-8359eb29e329?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'light-show.jpg',
+    imageSource: '',
+    imageFile: 'light-show.png',
   },
   {
     name: 'מכוניות מתנגשות',
@@ -120,9 +122,8 @@ const rideSeeds: RideSeed[] = [
     category: 'family',
     price: 28,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1598899134739-24c46f58b8c0?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'bumper-cars.jpg',
+    imageSource: '',
+    imageFile: 'bumper-cars.png',
   },
   {
     name: 'ספינת השודדים',
@@ -132,9 +133,8 @@ const rideSeeds: RideSeed[] = [
     category: 'thrill',
     price: 32,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'pirate-ship.jpg',
+    imageSource: '',
+    imageFile: 'pirate-ship.png',
   },
   {
     name: 'כוסות התה המטורפות',
@@ -144,9 +144,8 @@ const rideSeeds: RideSeed[] = [
     category: 'kids',
     price: 22,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1470104240373-bc1812eddc9f?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'teacups.jpg',
+    imageSource: '',
+    imageFile: 'teacups.png',
   },
   {
     name: 'מגדל הנפילה החופשית',
@@ -156,9 +155,8 @@ const rideSeeds: RideSeed[] = [
     category: 'thrill',
     price: 42,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1468436139062-f60a71c5c892?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'drop-tower.jpg',
+    imageSource: '',
+    imageFile: 'drop-tower.png',
   },
   {
     name: 'נהר הרפים',
@@ -168,9 +166,8 @@ const rideSeeds: RideSeed[] = [
     category: 'family',
     price: 30,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'lazy-river.jpg',
+    imageSource: '',
+    imageFile: 'lazy-river.png',
   },
   {
     name: 'בריכת הגלים',
@@ -180,9 +177,8 @@ const rideSeeds: RideSeed[] = [
     category: 'water',
     price: 38,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1518012312832-96aea3c91144?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'wave-pool.jpg',
+    imageSource: '',
+    imageFile: 'wave-pool.png',
   },
   {
     name: 'רכבות קרטינג מהירות',
@@ -192,9 +188,8 @@ const rideSeeds: RideSeed[] = [
     category: 'thrill',
     price: 36,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1547744152-14d985cb937f?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'go-kart.jpg',
+    imageSource: '',
+    imageFile: 'go-kart.png',
   },
   {
     name: 'בית הבלונים הקסום',
@@ -204,9 +199,8 @@ const rideSeeds: RideSeed[] = [
     category: 'kids',
     price: 18,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'ball-pit.jpg',
+    imageSource: '',
+    imageFile: 'ball-pit.png',
   },
   {
     name: 'מסע בגלקסיה',
@@ -216,9 +210,8 @@ const rideSeeds: RideSeed[] = [
     category: 'family',
     price: 34,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'space-ride.jpg',
+    imageSource: '',
+    imageFile: 'space-ride.png',
   },
   {
     name: 'הגשר השקוף',
@@ -228,11 +221,42 @@ const rideSeeds: RideSeed[] = [
     category: 'thrill',
     price: 25,
     status: 'active',
-    imageSource:
-      'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80',
-    imageFile: 'glass-bridge.jpg',
+    imageSource: '',
+    imageFile: 'glass-bridge.png',
   },
 ];
+
+function normalizePicName(name: string): string {
+  return name.trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function findLocalPicSource(rideName: string): string | null {
+  if (!fs.existsSync(PICS_DIR)) {
+    return null;
+  }
+
+  const lookup = normalizePicName(RIDE_PIC_ALIASES[rideName] || rideName);
+  for (const file of fs.readdirSync(PICS_DIR)) {
+    if (!/\.(png|jpe?g|webp)$/i.test(file)) {
+      continue;
+    }
+    if (normalizePicName(path.parse(file).name) === lookup) {
+      return path.join(PICS_DIR, file);
+    }
+  }
+  return null;
+}
+
+function copyRideImageFromPics(seed: RideSeed, imagesDir: string): string | null {
+  const source = findLocalPicSource(seed.name);
+  if (!source) {
+    return null;
+  }
+
+  const dest = path.join(imagesDir, seed.imageFile);
+  fs.copyFileSync(source, dest);
+  return `/uploads/images/${seed.imageFile}`;
+}
 
 function copyFallbackImage(imagesDir: string, destFile: string, fallbackFile: string): boolean {
   const fallbackPath = path.join(imagesDir, fallbackFile);
@@ -271,12 +295,21 @@ function ensureLocalPlaceholderImage(imagesDir: string): string {
 }
 
 async function resolveRideImage(seed: RideSeed, imagesDir: string): Promise<string> {
+  const fromPics = copyRideImageFromPics(seed, imagesDir);
+  if (fromPics) {
+    return fromPics;
+  }
+
   const dest = path.join(imagesDir, seed.imageFile);
-  if (!fs.existsSync(dest)) {
+  if (fs.existsSync(dest) && fs.statSync(dest).size > 0) {
+    return `/uploads/images/${seed.imageFile}`;
+  }
+
+  if (seed.imageSource) {
     try {
       return await downloadImage(seed.imageSource, seed.imageFile);
     } catch (err) {
-      let copied = copyFallbackImage(imagesDir, seed.imageFile, 'ferris-wheel.jpg');
+      let copied = copyFallbackImage(imagesDir, seed.imageFile, 'ferris-wheel.png');
       if (!copied) {
         const placeholderFile = ensureLocalPlaceholderImage(imagesDir);
         copied = copyFallbackImage(imagesDir, seed.imageFile, placeholderFile);
@@ -288,7 +321,8 @@ async function resolveRideImage(seed: RideSeed, imagesDir: string): Promise<stri
       throw err as Error;
     }
   }
-  return `/uploads/images/${seed.imageFile}`;
+
+  throw new Error(`No local pic found for ride: ${seed.name}`);
 }
 
 function getStoredImageVersion(imagesDir: string): number {
@@ -325,7 +359,7 @@ async function backfillRideImages(): Promise<void> {
   const forceRefresh = getStoredImageVersion(imagesDir) < IMAGE_SEED_VERSION;
   let refreshFailures = 0;
   if (forceRefresh) {
-    console.log(`Refreshing ride images to version ${IMAGE_SEED_VERSION} (Luna Park Tel Aviv)`);
+    console.log(`Refreshing ride images to version ${IMAGE_SEED_VERSION} (local pics folder)`);
   }
 
   for (const seed of rideSeeds) {

@@ -56,8 +56,8 @@ export class RidesCatalogComponent implements OnInit {
   }
 
   protected mediaUrl(path?: string): string {
-    if (!path || path.startsWith('/uploads/images/')) {
-      return getRidePublicImage();
+    if (!path) {
+      return this.fallbackRideImage;
     }
     if (path.startsWith('http')) {
       return path;
@@ -66,7 +66,7 @@ export class RidesCatalogComponent implements OnInit {
   }
 
   protected rideImage(ride: Ride): string {
-    if (!ride.imageUrl || ride.imageUrl.startsWith('/uploads/images/')) {
+    if (!ride.imageUrl) {
       return getRidePublicImage(ride.name);
     }
     return this.mediaUrl(ride.imageUrl);
