@@ -8,6 +8,19 @@
     </a>
   </header>
 
+  @if (cart.count() === 0) {
+    <mat-card class="empty-cart">
+      <mat-icon class="empty-icon">shopping_cart</mat-icon>
+      <h2>הסל ריק</h2>
+      <p>עדיין לא הוספת מתקנים לסל.</p>
+      <a mat-flat-button color="primary" routerLink="/rides">
+        <mat-icon>local_activity</mat-icon>
+        עבור למתקנים
+      </a>
+    </mat-card>
+  }
+
+  @if (cart.count() > 0) {
   <div class="checkout-grid">
     <mat-card class="summary-card">
       <mat-card-header>
@@ -142,4 +155,5 @@
       </mat-card-content>
     </mat-card>
   </div>
+  }
 </div>

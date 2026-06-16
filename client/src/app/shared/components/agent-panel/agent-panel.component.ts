@@ -1,10 +1,15 @@
 import { Component, ElementRef, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AgentService, AgentResponse, RidePickItem } from '../../../core/services/agent.service';
+import {
+  AgentService,
+  AgentResponse,
+  AgentHistoryTurn,
+  RidePickItem,
+} from '../../../core/services/agent.service';
 import { AgentUiService } from '../../../core/services/agent-ui.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { CartService } from '../../../core/services/cart.service';
@@ -29,6 +34,7 @@ export class AgentPanelComponent {
   private readonly agentUi = inject(AgentUiService);
   private readonly cart = inject(CartService);
   private readonly ridesApi = inject(RideService);
+  private readonly router = inject(Router);
   protected readonly auth = inject(AuthService);
 
   protected readonly isOpen = this.agentUi.isOpen;
@@ -75,18 +81,26 @@ export class AgentPanelComponent {
       return;
     }
 
+    const history = this.buildHistory();
     this.messages.update((list) => [...list, { role: 'user', text }]);
     this.input = '';
     this.loading.set(true);
     this.agentUi.open();
 
-    this.agent.chat(text).subscribe({
+    this.agent.chat(text, history).subscribe({
       next: (res) => this.handleResponse(res),
       error: (err) => {
         this.pushAgent(err.error?.message || 'שגיאה בתקשורת עם הסוכן', false);
         this.loading.set(false);
       },
     });
+  }
+
+  private buildHistory(): AgentHistoryTurn[] {
+    return this.messages()
+      .filter((msg) => !msg.ridePicker?.length)
+      .map((msg) => ({ role: msg.role, text: msg.text }))
+      .filter((msg) => msg.text.trim().length > 0);
   }
 
   private isGenericAddRequest(text: string): boolean {
@@ -222,9 +236,32 @@ export class AgentPanelComponent {
       case 'cart_clear':
         this.cart.clear();
         return 'ריקנתי את הסל ✓';
+      case 'go_to_checkout':
+        return this.goToCheckout(action.target);
       default:
         return null;
     }
+  }
+
+  private goToCheckout(target?: 'book' | 'cart'): string {
+    if (!this.auth.isAuthenticated()) {
+      return 'צריך להתחבר לחשבון כדי לעבור לתשלום.';
+    }
+
+    if (target === 'book') {
+      this.router.navigate(['/book']);
+      this.close();
+      return 'מעבירה אותך לדף ההזמנה להשלמת רכישת הכרטיס 🎟️';
+    }
+
+    if (this.cart.count() === 0) {
+      this.router.navigate(['/rides']);
+      this.close();
+      return 'הסל ריק — מעבירה אותך למתקנים כדי לבחור 🎡';
+    }
+    this.router.navigate(['/cart-checkout']);
+    this.close();
+    return 'מעבירה אותך לדף התשלום להשלמת ההזמנה 💳';
   }
 
   private pushAgent(text: string, success = true, ridePicker?: RidePickItem[]): void {

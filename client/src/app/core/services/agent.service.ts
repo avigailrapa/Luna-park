@@ -18,11 +18,18 @@ export interface RidePickItem {
 }
 
 export interface AgentClientAction {
-  type: 'cart_add' | 'cart_remove' | 'cart_show' | 'cart_clear' | 'show_ride_picker';
+  type:
+    | 'cart_add'
+    | 'cart_remove'
+    | 'cart_show'
+    | 'cart_clear'
+    | 'show_ride_picker'
+    | 'go_to_checkout';
   ride?: RidePickItem & { status?: string };
   rides?: RidePickItem[];
   rideId?: string;
   rideName?: string;
+  target?: 'book' | 'cart';
 }
 
 export interface AgentResponse {
@@ -34,13 +41,18 @@ export interface AgentResponse {
   clientAction?: AgentClientAction;
 }
 
+export interface AgentHistoryTurn {
+  role: 'user' | 'agent';
+  text: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AgentService {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/agent`;
 
-  chat(message: string) {
-    return this.http.post<AgentResponse>(`${this.base}/chat`, { message });
+  chat(message: string, history: AgentHistoryTurn[] = []) {
+    return this.http.post<AgentResponse>(`${this.base}/chat`, { message, history });
   }
 
   execute(tool: string, params: Record<string, unknown> = {}) {

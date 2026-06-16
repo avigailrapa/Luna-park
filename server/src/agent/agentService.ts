@@ -6,7 +6,7 @@ import { findRideByName, findRideByNameAny, suggestRideNames } from './rideMatch
 import { runHandler, type ExpressHandler } from './runHandler';
 import { getToolById, getToolsForRole, getUserRole } from './tools';
 import { geminiApiKey } from '../config/env';
-import { runGeminiAgent } from './geminiAgent';
+import { runGeminiAgent, type ChatHistoryTurn } from './geminiAgent';
 import { parseMessage } from './intentParser';
 import type { Intent } from './intentParser';
 import * as authController from '../controllers/authController';
@@ -183,6 +183,16 @@ export async function executeTool(
       status: 200,
       data: { cleared: true },
       clientAction: { type: 'cart_clear' },
+    };
+  }
+
+  if (toolId === 'checkout') {
+    const ticketType = String(params.ticketType || '').toLowerCase();
+    const target = ticketType === 'full_day' || ticketType === 'hourly' ? 'book' : 'cart';
+    return {
+      status: 200,
+      data: { target },
+      clientAction: { type: 'go_to_checkout', target },
     };
   }
 
@@ -450,6 +460,16 @@ export function formatToolResult(toolId: string, result: ToolResult): FormattedR
     };
   }
 
+  if (toolId === 'checkout') {
+    return {
+      success: true,
+      message: 'מעבירה אותך לדף התשלום להשלמת ההזמנה 💳',
+      status,
+      data,
+      clientAction: result.clientAction,
+    };
+  }
+
   if (toolId === 'get_ride' && data?.ride) {
     const ride = data.ride as { name: string; price: number; status: string; category: string };
     return {
@@ -583,23 +603,58 @@ function isGeminiAuthError(err: unknown): boolean {
   return text.includes('API_KEY_INVALID') || text.includes('API key not valid');
 }
 
-export async function handleChat(message: string, user: AuthUser | null): Promise<FormattedResult> {
-  if (geminiApiKey) {
-    try {
-      return await runGeminiAgent(message, user);
-    } catch (err) {
-      if (isGeminiAuthError(err)) {
-        console.error(
-          'Gemini API key invalid — set a valid GEMINI_API_KEY in server/.env (https://aistudio.google.com/apikey). Using legacy parser.',
-        );
-      } else {
-        console.error('Gemini agent error:', err);
-      }
-      return handleChatLegacy(message, user);
-    }
+function isGeminiQuotaError(err: unknown): boolean {
+  const text = String(err);
+  return (
+    text.includes('429') ||
+    text.includes('Too Many Requests') ||
+    text.includes('quota') ||
+    text.includes('RESOURCE_EXHAUSTED')
+  );
+}
+
+export async function handleChat(
+  message: string,
+  user: AuthUser | null,
+  history?: ChatHistoryTurn[],
+): Promise<FormattedResult> {
+  if (!geminiApiKey) {
+    return {
+      success: false,
+      message:
+        'GEMINI_API_KEY לא מוגדר בשרת. הוסיפי אותו ל-server/.env כדי להפעיל את הסוכן.',
+    };
   }
 
-  return handleChatLegacy(message, user);
+  try {
+    return await runGeminiAgent(message, user, history);
+  } catch (err) {
+    if (isGeminiAuthError(err)) {
+      console.error(
+        'Gemini API key invalid — set a valid GEMINI_API_KEY in server/.env (https://aistudio.google.com/apikey).',
+      );
+      return {
+        success: false,
+        message:
+          'מפתח Gemini לא תקין. עדכני GEMINI_API_KEY ב-server/.env ונסי שוב.',
+      };
+    }
+    if (isGeminiQuotaError(err)) {
+      console.error(
+        'Gemini quota exceeded — the model has no free-tier quota for this project. Try GEMINI_MODEL=gemini-2.5-flash or enable billing (https://aistudio.google.com/app/apikey).',
+      );
+      return {
+        success: false,
+        message:
+          'חרגת ממכסת השימוש של Gemini למודל הזה. נסי מודל אחר (GEMINI_MODEL=gemini-2.5-flash ב-server/.env) או הפעילי חיוב בפרויקט.',
+      };
+    }
+    console.error('Gemini agent error:', err);
+    return {
+      success: false,
+      message: 'סוכן Gemini לא זמין כרגע. נסי שוב בעוד רגע.',
+    };
+  }
 }
 
 export async function handleExecute(

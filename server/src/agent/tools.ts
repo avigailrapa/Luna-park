@@ -116,19 +116,14 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     ],
   },
   {
-    id: 'create_order',
-    method: 'POST',
-    path: '/api/orders',
-    roles: ['customer'],
-    description: 'הזמנת כרטיס (יום מלא / שעתי / מתקן)',
+    id: 'checkout',
+    method: 'CLIENT',
+    path: 'checkout',
+    roles: ['customer', 'admin'],
+    description:
+      'מעבר לדף התשלום להשלמת רכישה — הסוכן אינו מבצע תשלום בעצמו. לכרטיס יום מלא או שעתי העבר ticketType=full_day או hourly (מעביר לדף ההזמנה). לתשלום על מתקנים שנמצאים בסל אל תעביר ticketType (מעביר לדף הסל).',
     params: [
-      { name: 'ticketType', required: true, description: 'full_day | hourly | ride' },
-      { name: 'chosenDate', required: true, description: 'YYYY-MM-DD' },
-      { name: 'hoursAmount', optional: true },
-      { name: 'startHour', optional: true },
-      { name: 'endHour', optional: true },
-      { name: 'rideId', optional: true },
-      { name: 'couponCode', optional: true },
+      { name: 'ticketType', optional: true, description: 'full_day | hourly | ride' },
     ],
   },
   {

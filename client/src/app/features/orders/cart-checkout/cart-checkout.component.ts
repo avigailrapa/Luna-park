@@ -1,4 +1,4 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, inject, OnDestroy, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { forkJoin } from 'rxjs';
@@ -33,7 +33,7 @@ import { OrderService } from '../../../core/services/order.service';
   templateUrl: './cart-checkout.component.html',
   styleUrl: './cart-checkout.component.scss',
 })
-export class CartCheckoutComponent implements OnInit, OnDestroy {
+export class CartCheckoutComponent implements OnDestroy {
   private readonly fb = inject(FormBuilder);
   protected readonly cart = inject(CartService);
   private readonly orderService = inject(OrderService);
@@ -51,12 +51,6 @@ export class CartCheckoutComponent implements OnInit, OnDestroy {
     expiry: ['', [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/\d{2}$/)]],
     cvv: ['', [Validators.required, Validators.pattern(/^\d{3}$/)]],
   });
-
-  ngOnInit(): void {
-    if (this.cart.count() === 0) {
-      this.router.navigate(['/rides']);
-    }
-  }
 
   ngOnDestroy(): void {
     if (this.paymentTimer !== null) {
