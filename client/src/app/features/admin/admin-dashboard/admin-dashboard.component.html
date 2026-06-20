@@ -145,10 +145,6 @@
                 <mat-label>מגבלת שימוש</mat-label>
                 <input matInput type="number" formControlName="usageLimit" placeholder="ללא הגבלה" />
               </mat-form-field>
-              <mat-form-field appearance="outline" class="full">
-                <mat-label>קישור לתמונה (URL)</mat-label>
-                <input matInput formControlName="imageUrl" />
-              </mat-form-field>
               <mat-slide-toggle formControlName="isActive">פעיל</mat-slide-toggle>
               <button mat-raised-button color="primary" type="submit">הוסף קופון</button>
             </form>
@@ -160,11 +156,7 @@
             <ng-container matColumnDef="image">
               <th mat-header-cell *matHeaderCellDef>תמונה</th>
               <td mat-cell *matCellDef="let coupon">
-                @if (coupon.imageUrl) {
-                  <img class="thumb" [src]="mediaUrl(coupon.imageUrl)" [alt]="coupon.code" />
-                } @else {
-                  —
-                }
+                <img class="thumb" [src]="couponImage()" [alt]="coupon.code" />
               </td>
             </ng-container>
             <ng-container matColumnDef="code">

@@ -15,6 +15,7 @@ import { Ride } from '../../../core/models/ride.model';
 import { Coupon } from '../../../core/models/coupon.model';
 import { RideService } from '../../../core/services/ride.service';
 import { CouponService } from '../../../core/services/coupon.service';
+import { couponImagePath } from '../../../core/constants/coupon-media';
 import { environment } from '../../../../environments/environment';
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -86,7 +87,6 @@ export class AdminDashboardComponent implements OnInit {
     expiresAt: ['', Validators.required],
     usageLimit: [null as number | null],
     isActive: [true],
-    imageUrl: [''],
   });
 
   ngOnInit(): void {
@@ -108,6 +108,10 @@ export class AdminDashboardComponent implements OnInit {
     if (!path) return '';
     if (path.startsWith('http')) return path;
     return `${environment.uploadsUrl}${path}`;
+  }
+
+  protected couponImage(): string {
+    return this.mediaUrl(couponImagePath());
   }
 
   protected onImageSelected(event: Event): void {
@@ -213,7 +217,6 @@ export class AdminDashboardComponent implements OnInit {
         expiresAt: new Date(raw.expiresAt).toISOString(),
         usageLimit: raw.usageLimit,
         isActive: raw.isActive,
-        imageUrl: raw.imageUrl,
       })
       .subscribe({
         next: () => {
@@ -224,7 +227,6 @@ export class AdminDashboardComponent implements OnInit {
             expiresAt: '',
             usageLimit: null,
             isActive: true,
-            imageUrl: '',
           });
           this.loadCoupons();
           this.snackBar.open('קופון נוסף בהצלחה', 'סגור', { duration: 3000 });

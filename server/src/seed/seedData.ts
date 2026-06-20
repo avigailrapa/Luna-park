@@ -6,6 +6,11 @@ import Coupon from '../models/Coupon';
 import User from '../models/User';
 import { adminName, adminEmail, adminPassword, uploadDir } from '../config/env';
 import { downloadImage } from './downloadMedia';
+import {
+  COUPON_IMAGE_FILE,
+  COUPON_IMAGE_VERSION,
+  couponImageUrl,
+} from '../constants/couponMedia';
 
 interface RideSeed {
   name: string;
@@ -29,11 +34,9 @@ interface CouponSeed {
   usageLimit: number | null;
   usedCount?: number;
   isActive: boolean;
-  imageSource: string;
-  imageFile: string;
 }
 
-type CouponInsertData = Omit<CouponSeed, 'imageSource' | 'imageFile'> & { imageUrl: string };
+type CouponInsertData = CouponSeed & { imageUrl: string };
 
 /** Bump when ride image sources change — triggers re-copy on next server start. */
 const IMAGE_SEED_VERSION = 8;
@@ -274,12 +277,7 @@ function ensureLocalPlaceholderImage(imagesDir: string): string {
     return 'ride-placeholder.jpg';
   }
 
-  const candidateFallbacks = [
-    'coupon-luna10.jpg',
-    'coupon-summer20.jpg',
-    'coupon-family15.jpg',
-    'coupon-vip25.jpg',
-  ];
+  const candidateFallbacks = ['coupon.jpg', 'ferris-wheel.png'];
   for (const file of candidateFallbacks) {
     const source = path.join(imagesDir, file);
     if (fs.existsSync(source) && fs.statSync(source).size > 0) {
@@ -454,8 +452,6 @@ const couponSeeds: CouponSeed[] = [
     expiresAt: new Date('2026-12-31'),
     usageLimit: 100,
     isActive: true,
-    imageSource: 'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=400&q=80',
-    imageFile: 'coupon-luna10.jpg',
   },
   {
     code: 'SUMMER20',
@@ -464,8 +460,6 @@ const couponSeeds: CouponSeed[] = [
     expiresAt: new Date('2026-09-30'),
     usageLimit: 50,
     isActive: true,
-    imageSource: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=400&q=80',
-    imageFile: 'coupon-summer20.jpg',
   },
   {
     code: 'FAMILY15',
@@ -474,8 +468,6 @@ const couponSeeds: CouponSeed[] = [
     expiresAt: new Date('2026-12-31'),
     usageLimit: null,
     isActive: true,
-    imageSource: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=400&q=80',
-    imageFile: 'coupon-family15.jpg',
   },
   {
     code: 'VIP25',
@@ -485,10 +477,73 @@ const couponSeeds: CouponSeed[] = [
     usageLimit: 10,
     usedCount: 2,
     isActive: true,
-    imageSource: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&q=80',
-    imageFile: 'coupon-vip25.jpg',
   },
 ];
+
+function getStoredCouponImageVersion(imagesDir: string): number {
+  const versionFile = path.join(imagesDir, '.coupon-images-version');
+  if (!fs.existsSync(versionFile)) {
+    return 0;
+  }
+  const parsed = parseInt(fs.readFileSync(versionFile, 'utf8'), 10);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function markCouponImageVersion(imagesDir: string): void {
+  const versionFile = path.join(imagesDir, '.coupon-images-version');
+  fs.writeFileSync(versionFile, String(COUPON_IMAGE_VERSION));
+}
+
+/** One shared coupon image for all coupons — local park photo, no discount text. */
+function resolveCouponImage(imagesDir: string): string {
+  const dest = path.join(imagesDir, COUPON_IMAGE_FILE);
+  const ferrisPic = findLocalPicSource('גלגל הענק לונה');
+  if (ferrisPic) {
+    fs.copyFileSync(ferrisPic, dest);
+    return couponImageUrl();
+  }
+
+  if (copyFallbackImage(imagesDir, COUPON_IMAGE_FILE, 'ferris-wheel.png')) {
+    return couponImageUrl();
+  }
+
+  if (fs.existsSync(dest) && fs.statSync(dest).size > 0) {
+    return couponImageUrl();
+  }
+
+  throw new Error('Coupon image source not found');
+}
+
+async function syncCouponImages(): Promise<void> {
+  const imagesDir = path.join(uploadDir, 'images');
+  if (!fs.existsSync(imagesDir)) {
+    fs.mkdirSync(imagesDir, { recursive: true });
+  }
+
+  const forceRefresh = getStoredCouponImageVersion(imagesDir) < COUPON_IMAGE_VERSION;
+  const dest = path.join(imagesDir, COUPON_IMAGE_FILE);
+  const fileMissing = !fs.existsSync(dest) || fs.statSync(dest).size === 0;
+
+  if (forceRefresh || fileMissing) {
+    try {
+      if (forceRefresh && fs.existsSync(dest)) {
+        fs.unlinkSync(dest);
+      }
+      resolveCouponImage(imagesDir);
+      markCouponImageVersion(imagesDir);
+      console.log(`Synced shared coupon image: ${COUPON_IMAGE_FILE}`);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.warn('Could not sync coupon image:', message);
+    }
+  }
+
+  const sharedUrl = couponImageUrl();
+  const result = await Coupon.updateMany({}, { $set: { imageUrl: sharedUrl } });
+  if (result.modifiedCount > 0) {
+    console.log(`Updated coupon image URL for ${result.modifiedCount} coupons`);
+  }
+}
 
 async function seedAdmin(): Promise<void> {
   const email = adminEmail?.toLowerCase().trim() || '';
@@ -562,23 +617,18 @@ export async function seedDatabase(): Promise<void> {
   await backfillRideImages();
 
   const couponCount = await Coupon.countDocuments();
+  const sharedCouponImage = couponImageUrl();
   if (couponCount === 0) {
-    const coupons: CouponInsertData[] = [];
-    for (const seed of couponSeeds) {
-      const { imageSource, imageFile, ...rest } = seed;
-      const couponData: CouponInsertData = { ...rest, imageUrl: '' };
-      try {
-        couponData.imageUrl = await downloadImage(imageSource, imageFile);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err);
-        console.warn(`Could not download image for ${couponData.code}:`, message);
-      }
-      coupons.push(couponData);
-    }
+    const coupons: CouponInsertData[] = couponSeeds.map((seed) => ({
+      ...seed,
+      imageUrl: sharedCouponImage,
+    }));
     await Coupon.insertMany(coupons);
     console.log(`Seeded ${coupons.length} coupons`);
   } else {
     console.log(`Coupons already exist (${couponCount}), skipping coupon seed`);
   }
+
+  await syncCouponImages();
 }
 

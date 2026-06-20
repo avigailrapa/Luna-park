@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
 import Coupon from '../models/Coupon';
+import { couponImageUrl } from '../constants/couponMedia';
 import { validateCoupon } from '../utils/couponValidator';
 import type { AppError } from '../types';
 
@@ -41,6 +42,9 @@ export async function createCoupon(req: Request, res: Response, next: NextFuncti
     const payload = { ...req.body };
     if (payload.code) {
       payload.code = String(payload.code).trim().toUpperCase();
+    }
+    if (!payload.imageUrl) {
+      payload.imageUrl = couponImageUrl();
     }
     const coupon = await Coupon.create(payload);
     res.status(201).json({ coupon });
