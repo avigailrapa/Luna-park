@@ -22,7 +22,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'GET',
     path: '/api/health',
     roles: ['guest', 'customer', 'admin'],
-    description: 'בדיקת תקינות השרת',
+    description: 'Checks whether the server is up and healthy.',
     params: [],
   },
   {
@@ -30,17 +30,18 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'GET',
     path: '/api/rides',
     roles: ['guest', 'customer', 'admin'],
-    description: 'רשימת כל המתקנים',
-    params: [{ name: 'status', optional: true, description: 'active או maintenance' }],
+    description:
+      'Returns the list of all rides/attractions in the park with their name and price. Call this tool for ANY message about rides/attractions in the park, including short imperative commands, e.g. "מתקנים", "הצג מתקנים", "רשימת מתקנים", "מה יש בפארק", "אילו אטרקציות יש", "מה אפשר לעשות בפארק", "show me the rides" — never answer this from general knowledge, and treat short 2-word commands like "הצג מתקנים" as a direct instruction to call this tool, not as small talk.',
+    params: [{ name: 'status', optional: true, description: 'Filter by "active" or "maintenance"' }],
   },
   {
     id: 'get_ride',
     method: 'GET',
     path: '/api/rides/:id',
     roles: ['guest', 'customer', 'admin'],
-    description: 'פרטי מתקן לפי שם או מזהה',
+    description: 'Gets details of a single ride by its name or id.',
     params: [
-      { name: 'rideName', optional: true, description: 'שם המתקן בעברית' },
+      { name: 'rideName', optional: true, description: "The ride's name (in Hebrew, as the user typed it)" },
       { name: 'id', optional: true },
     ],
   },
@@ -49,7 +50,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'CLIENT',
     path: 'cart',
     roles: ['guest', 'customer', 'admin'],
-    description: 'בחירת מתקן להוספה לסל מתוך רשימה',
+    description: 'Shows the user a picker list of rides so they can choose one to add to the cart.',
     params: [],
   },
   {
@@ -57,23 +58,24 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'CLIENT',
     path: 'cart',
     roles: ['customer', 'admin'],
-    description: 'הוספת מתקן לסל לפי שם (לדוגמה: הוסף אדרנלין לסל)',
-    params: [{ name: 'rideName', required: true }],
+    description:
+      'Adds a ride to the shopping cart by name. Call this whenever a logged-in customer/admin asks to add a specific ride to the cart, e.g. "add Adrenaline to my cart".',
+    params: [{ name: 'rideName', required: true, description: "The ride's name (in Hebrew, as the user typed it)" }],
   },
   {
     id: 'remove_from_cart',
     method: 'CLIENT',
     path: 'cart',
     roles: ['guest', 'customer', 'admin'],
-    description: 'הסרת מתקן מהסל לפי שם',
-    params: [{ name: 'rideName', required: true }],
+    description: 'Removes a ride from the shopping cart by name.',
+    params: [{ name: 'rideName', required: true, description: "The ride's name (in Hebrew, as the user typed it)" }],
   },
   {
     id: 'cart_show',
     method: 'CLIENT',
     path: 'cart',
     roles: ['guest', 'customer', 'admin'],
-    description: 'הצגת תוכן הסל (מה בסל)',
+    description: 'Shows the current contents of the shopping cart.',
     params: [],
   },
   {
@@ -81,7 +83,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'CLIENT',
     path: 'cart',
     roles: ['guest', 'customer', 'admin'],
-    description: 'ריקון הסל',
+    description: 'Empties the shopping cart.',
     params: [],
   },
   {
@@ -89,15 +91,16 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'GET',
     path: '/api/coupons/validate',
     roles: ['guest', 'customer', 'admin'],
-    description: 'בדיקת תקינות קופון',
-    params: [{ name: 'code', required: true }],
+    description:
+      'Checks whether a coupon code is valid and returns its discount. Call this whenever the user asks to check/validate a coupon code, e.g. "check coupon SUMMER20".',
+    params: [{ name: 'code', required: true, description: 'The coupon code' }],
   },
   {
     id: 'register',
     method: 'POST',
     path: '/api/auth/register',
     roles: ['guest'],
-    description: 'הרשמת משתמש חדש',
+    description: 'Registers a new user account.',
     params: [
       { name: 'name', required: true },
       { name: 'email', required: true },
@@ -109,7 +112,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'POST',
     path: '/api/auth/login',
     roles: ['guest'],
-    description: 'התחברות (מחזיר JWT)',
+    description: 'Logs a user in and returns a JWT.',
     params: [
       { name: 'email', required: true },
       { name: 'password', required: true },
@@ -121,7 +124,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     path: 'checkout',
     roles: ['customer', 'admin'],
     description:
-      'מעבר לדף התשלום להשלמת רכישה — הסוכן אינו מבצע תשלום בעצמו. לכרטיס יום מלא או שעתי העבר ticketType=full_day או hourly (מעביר לדף ההזמנה). לתשלום על מתקנים שנמצאים בסל אל תעביר ticketType (מעביר לדף הסל).',
+      'Navigates the user to the payment page to complete a purchase — the agent never performs the payment itself. For a full-day or hourly ticket pass ticketType=full_day or hourly (goes to the booking page). For paying for rides already in the cart, do not pass ticketType (goes to the cart page).',
     params: [
       { name: 'ticketType', optional: true, description: 'full_day | hourly | ride' },
     ],
@@ -131,7 +134,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'GET',
     path: '/api/orders/my-orders',
     roles: ['customer'],
-    description: 'ההזמנות שלי',
+    description: "Lists the logged-in customer's own past orders.",
     params: [],
   },
   {
@@ -139,7 +142,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'GET',
     path: '/api/orders/my-orders/:id/barcode',
     roles: ['customer'],
-    description: 'ברקוד כרטיס להזמנה',
+    description: 'Gets the entry barcode image for one of the customer\'s orders.',
     params: [{ name: 'id', required: true }],
   },
   {
@@ -147,7 +150,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'GET',
     path: '/api/orders',
     roles: ['admin'],
-    description: 'כל ההזמנות (אדמין)',
+    description: 'Lists all orders in the system (admin only).',
     params: [],
   },
   {
@@ -155,7 +158,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'GET',
     path: '/api/orders/validate/:code',
     roles: ['admin'],
-    description: 'אימות כרטיס בכניסה',
+    description: 'Validates an entry ticket code at the park gate (admin only).',
     params: [{ name: 'code', required: true }],
   },
   {
@@ -163,7 +166,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'GET',
     path: '/api/coupons',
     roles: ['admin'],
-    description: 'רשימת קופונים',
+    description: 'Lists all coupons (admin only).',
     params: [],
   },
   {
@@ -171,7 +174,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'POST',
     path: '/api/coupons',
     roles: ['admin'],
-    description: 'יצירת קופון',
+    description: 'Creates a new coupon (admin only).',
     params: [
       { name: 'code', required: true },
       { name: 'discountPercent', required: true },
@@ -185,9 +188,9 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'PUT',
     path: '/api/coupons/:id',
     roles: ['admin'],
-    description: 'עדכון קופון לפי code או id',
+    description: 'Updates a coupon by code or id (admin only).',
     params: [
-      { name: 'code', optional: true, description: 'קוד הקופון (למשל SUMMER20)' },
+      { name: 'code', optional: true, description: 'The coupon code, e.g. SUMMER20' },
       { name: 'id', optional: true },
       { name: 'discountPercent', optional: true },
       { name: 'expiresAt', optional: true, description: 'YYYY-MM-DD' },
@@ -201,9 +204,9 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'DELETE',
     path: '/api/coupons/:id',
     roles: ['admin'],
-    description: 'מחיקת קופון לפי code או id',
+    description: 'Deletes a coupon by code or id (admin only).',
     params: [
-      { name: 'code', optional: true, description: 'קוד הקופון' },
+      { name: 'code', optional: true, description: 'The coupon code' },
       { name: 'id', optional: true },
     ],
   },
@@ -212,7 +215,7 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'POST',
     path: '/api/rides',
     roles: ['admin'],
-    description: 'יצירת מתקן חדש',
+    description: 'Creates a new ride/attraction (admin only).',
     params: [
       { name: 'name', required: true },
       { name: 'price', required: true },
@@ -229,9 +232,10 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'PUT',
     path: '/api/rides/:id',
     roles: ['admin'],
-    description: 'עדכון מתקן לפי שם או id (מחיר, שם, סטטוס, תיאור וכו)',
+    description:
+      'Updates a ride by name or id (price, name, status, description, etc). Admin only. Prefer rideName over id — never ask the user for an id.',
     params: [
-      { name: 'rideName', optional: true, description: 'שם המתקן בעברית (למשל מגלשת המים הכחולה)' },
+      { name: 'rideName', optional: true, description: "The ride's name (in Hebrew, as the user typed it), e.g. מגלשת המים הכחולה" },
       { name: 'id', optional: true },
       { name: 'price', optional: true },
       { name: 'name', optional: true },
@@ -248,9 +252,9 @@ export const TOOL_CATALOG: ToolDefinition[] = [
     method: 'DELETE',
     path: '/api/rides/:id',
     roles: ['admin'],
-    description: 'מחיקת מתקן לפי שם או id',
+    description: 'Deletes a ride by name or id (admin only).',
     params: [
-      { name: 'rideName', optional: true, description: 'שם המתקן בעברית' },
+      { name: 'rideName', optional: true, description: "The ride's name (in Hebrew, as the user typed it)" },
       { name: 'id', optional: true },
     ],
   },

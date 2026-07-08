@@ -1,5 +1,6 @@
 import {
   GoogleGenerativeAI,
+  FunctionCallingMode,
   type Content,
   type Part,
   type ChatSession,
@@ -12,7 +13,7 @@ import type { AuthUser } from '../types';
 
 const MAX_TOOL_ROUNDS = 5;
 const MAX_HISTORY_TURNS = 12;
-const MAX_RETRIES = 2;
+const MAX_RETRIES = 3;
 
 export interface ChatHistoryTurn {
   role: 'user' | 'agent';
@@ -37,9 +38,17 @@ function buildHistory(turns: ChatHistoryTurn[] | undefined): Content[] {
   return history;
 }
 
-function isRateLimitError(err: unknown): boolean {
+function isRetryableError(err: unknown): boolean {
   const text = String(err);
-  return text.includes('429') || text.includes('Too Many Requests') || text.includes('RESOURCE_EXHAUSTED');
+  return (
+    text.includes('429') ||
+    text.includes('Too Many Requests') ||
+    text.includes('RESOURCE_EXHAUSTED') ||
+    text.includes('503') ||
+    text.includes('Service Unavailable') ||
+    text.includes('UNAVAILABLE') ||
+    text.includes('high demand')
+  );
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -54,7 +63,7 @@ async function sendMessageWithRetry(
       const result = await chat.sendMessage(content);
       return result.response;
     } catch (err) {
-      if (isRateLimitError(err) && attempt < MAX_RETRIES) {
+      if (isRetryableError(err) && attempt < MAX_RETRIES) {
         attempt += 1;
         await sleep(1500 * attempt);
         continue;
@@ -66,39 +75,43 @@ async function sendMessageWithRetry(
 
 function buildSystemPrompt(user: AuthUser | null): string {
   const role = getUserRole(user);
-  const userLine = user ? `המשתמש מחובר: ${user.email} (${role}).` : 'המשתמש אורח (לא מחובר).';
+  const userLine = user
+    ? `The user is logged in: ${user.email} (role: ${role}).`
+    : 'The user is a guest (not logged in).';
 
   const adminCrud =
     role === 'admin'
       ? `
-CRUD מתקנים (admin בלבד):
-- list_rides / get_ride — קריאה (get_ride עם rideName או id)
-- create_ride — יצירה (name, price חובה)
-- update_ride — עדכון לפי rideName (לא צריך id!): למשל { rideName: "מגלשת המים הכחולה", price: 40 }
-- delete_ride — מחיקה לפי rideName או id
+Ride CRUD (admin only):
+- list_rides / get_ride — read (get_ride takes rideName or id)
+- create_ride — create (name, price required)
+- update_ride — update by rideName (no id needed!), e.g. { rideName: "מגלשת המים הכחולה", price: 40 }
+- delete_ride — delete by rideName or id
 
-CRUD קופונים (admin):
-- list_coupons, create_coupon, update_coupon (code + שדות), delete_coupon (code)
+Coupon CRUD (admin only):
+- list_coupons, create_coupon, update_coupon (code + fields), delete_coupon (code)
 - list_orders, validate_ticket`
       : '';
 
-  return `אתה סוכן לונה פארק תל אביב — עוזר בעברית.
+  return `You are the Luna Park Tel Aviv assistant agent.
 
 ${userLine}
 
-כללים:
-- ענה תמיד בעברית, בקצרה וידידותית.
-- השתמש רק בכלים (functions) שסופקו.
-- לסל: cart_show, cart_clear, pick_ride_for_cart, add_to_cart, remove_from_cart.
-- add_to_cart דורש customer/admin.
-- list_rides להצגת מתקנים.
-- my_orders (customer), validate_coupon עם code.
-- הסוכן אינו מבצע תשלום/הזמנה בעצמו. כשהמשתמש רוצה לקנות/להזמין/לשלם — קרא לכלי checkout שמעביר לדף התשלום:
-  • כרטיס יום מלא או שעתי → checkout עם ticketType=full_day או hourly (מעביר לדף ההזמנה, שם משלמים). לא צריך סל לזה.
-  • תשלום על מתקנים שבסל → checkout בלי ticketType (מעביר לדף הסל). להוספת מתקנים השתמש קודם ב-add_to_cart.
+TOP PRIORITY RULE: Whenever the user's request matches one of the functions available to you, you MUST call that function to get real data — never answer questions about rides, prices, coupons, orders, or cart contents from your own general knowledge or by guessing. Only reply directly (without a function call) for greetings, small talk, or questions no available function can answer.
+
+Other rules:
+- Always reply to the user in Hebrew, briefly and in a friendly tone — regardless of the language of these instructions.
+- Only use the functions (tools) provided to you.
+- Cart actions: cart_show, cart_clear, pick_ride_for_cart, add_to_cart, remove_from_cart.
+- add_to_cart requires role customer/admin.
+- Use list_rides to answer any question about what rides/attractions exist in the park.
+- my_orders (customer only), validate_coupon takes a code.
+- The agent never performs payment/booking itself. When the user wants to buy/book/pay, call the checkout tool, which navigates to the payment page:
+  • Full-day or hourly ticket → checkout with ticketType=full_day or hourly (goes to the booking page, where payment happens). No cart needed for this.
+  • Paying for rides already in the cart → checkout without ticketType (goes to the cart page). Use add_to_cart first to add rides.
 ${adminCrud}
-- לעדכון מחיר מתקן: update_ride עם rideName + price — אל תבקש id מהמשתמש.
-- אם חסר מידע — שאל בעברית.`;
+- To update a ride's price: call update_ride with rideName + price — never ask the user for an id.
+- If required information is missing, ask for it in Hebrew.`;
 }
 
 function sanitizeArgs(args: Record<string, unknown> | undefined): Record<string, unknown> {
@@ -128,6 +141,8 @@ export async function runGeminiAgent(
     model: geminiModel,
     systemInstruction: buildSystemPrompt(user),
     tools: [{ functionDeclarations: declarations }],
+    toolConfig: { functionCallingConfig: { mode: FunctionCallingMode.AUTO } },
+    generationConfig: { temperature: 0.2 },
   });
 
   const chat = model.startChat({ history: buildHistory(history) });
