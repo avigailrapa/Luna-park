@@ -9,8 +9,8 @@ Hebrew UI (RTL), modern booking-platform-inspired design, Angular 21 on the clie
 
 | Video | Description |
 |-------|-------------|
-| [luna-park-demo.mp4](docs/videos/luna-park-demo.mp4) | ~70s silent walkthrough of the app — home, rides, cart, checkout, barcode ticket, booking + coupon, AI agent, admin, mobile |
-| [luna-park-explainer.mp4](docs/videos/luna-park-explainer.mp4) | ~70s short explainer with Hebrew captions for each feature |
+| [luna-park-demo.mp4](docs/videos/luna-park-demo.mp4) | ~70s walkthrough of the app with background music — home, rides, cart, checkout, barcode ticket, booking + coupon, AI agent, admin, mobile |
+| [luna-park-explainer.mp4](docs/videos/luna-park-explainer.mp4) | ~70s short explainer with Hebrew captions and background music |
 
 ## Project overview
 
