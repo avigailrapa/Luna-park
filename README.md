@@ -5,6 +5,13 @@ Hebrew UI (RTL), modern booking-platform-inspired design, Angular 21 on the clie
 
 **Luna-park** is a full-stack amusement park ticketing and management system — Hebrew UI, image-rich catalog, cart checkout, barcode confirmations, AI assistant, and admin tools.
 
+## Demo videos
+
+| Video | Description |
+|-------|-------------|
+| [luna-park-demo.mp4](docs/videos/luna-park-demo.mp4) | ~70s silent walkthrough of the app — home, rides, cart, checkout, barcode ticket, booking + coupon, AI agent, admin, mobile |
+| [luna-park-explainer.mp4](docs/videos/luna-park-explainer.mp4) | ~70s short explainer with Hebrew captions for each feature |
+
 ## Project overview
 
 Visitors can browse a home page with a carousel of real park photos, explore a catalog of **16 rides**, add attractions to a cart and pay, or book an entry ticket (full day / hourly) with coupon codes. After checkout, they receive confirmation with a **digital barcode** (email or “My Orders”). A floating **AI agent** helps find rides and build a cart. Admins manage rides, coupons, and orders from a dedicated dashboard.
